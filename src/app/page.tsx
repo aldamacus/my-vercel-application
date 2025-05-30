@@ -1,54 +1,105 @@
+"use client";
+
 import Image from "next/image";
+import React, { useEffect, useRef, useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { AirbnbCalendarClient } from "@/clients/airbnb-calendar-client";
+import { BookingCalendarClient } from "@/clients/booking-calendar-client";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [date, setDate] = useState<Date | [Date, Date] | null>(new Date());
+  const [bookedDates, setBookedDates] = useState<Date[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Keep a ref to avoid stale closure in interval
+  const setBookedDatesRef = useRef(setBookedDates);
+  setBookedDatesRef.current = setBookedDates;
+
+  useEffect(() => {
+    // Merge all booked dates from all clients
+    function updateCalendar(newDates: Date[]) {
+      setBookedDatesRef.current((prev) => {
+        const all = [...prev, ...newDates];
+        // Remove duplicates by date string
+        const unique = Array.from(new Set(all.map((d) => d.toDateString()))).map((ds) => new Date(ds));
+        return unique;
+      });
+    }
+    const airbnbClient = new AirbnbCalendarClient(updateCalendar);
+    const bookingClient = new BookingCalendarClient(updateCalendar);
+    airbnbClient.start();
+    bookingClient.start();
+    return () => {
+      airbnbClient.stop();
+      bookingClient.stop();
+    };
+  }, []);
+
+  const handleBook = () => {
+    if (Array.isArray(date) && date.length === 2) {
+      // Book a range
+      const [start, end] = date;
+      const days: Date[] = [];
+      let current = new Date(start);
+      while (current <= end) {
+        if (!bookedDates.some((bd) => bd.toDateString() === current.toDateString())) {
+          days.push(new Date(current));
+        }
+        current.setDate(current.getDate() + 1);
+      }
+      setBookedDates([...bookedDates, ...days]);
+    } else if (date instanceof Date) {
+      if (!bookedDates.some((bd) => bd.toDateString() === date.toDateString())) {
+        setBookedDates([...bookedDates, date]);
+      }
+    }
+  };
+
+  const tileDisabled = ({ date: d }: { date: Date }) =>
+    bookedDates.some((bd) => bd.toDateString() === d.toDateString());
+
+  return (
+    <div className="grid grid-rows-[60px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+      {/* Header with navigation tabs */}
+      <header className="row-start-1 w-full flex justify-center items-center gap-8 mb-4">
+        <nav className="flex gap-8">
+          <a href="/" className="text-lg font-semibold hover:underline underline-offset-4">Home</a>
+          <a href="/clients" className="text-lg font-semibold hover:underline underline-offset-4">Clients</a>
+          <a href="/admin" className="text-lg font-semibold hover:underline underline-offset-4">Admin</a>
+        </nav>
+      </header>
+      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start w-full max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold mb-2 text-center w-full">Central am Bruckenthal</h1>
+        <p className="text-lg text-gray-700 mb-6 text-center w-full">
+          Welcome to your dream apartment in the heart of Sibiu, Romania! Nestled just steps away from the historic Bruckenthal Palace, this cozy and modern space offers the perfect blend of comfort and culture. Enjoy morning coffee with a view of cobblestone streets, explore vibrant local markets, and relax in a sunlit living room after a day of adventure. Whether you're here for business or leisure, Central am Bruckenthal is your gateway to the best of Sibiu.
+        </p>
+        {/* Image carousel */}
+        <div className="w-full overflow-x-auto flex gap-4 pb-2">
+          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Living Room" className="rounded-lg shadow-md w-72 h-48 object-cover" />
+          <img src="https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80" alt="Bedroom" className="rounded-lg shadow-md w-72 h-48 object-cover" />
+          <img src="https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80" alt="Kitchen" className="rounded-lg shadow-md w-72 h-48 object-cover" />
+          <img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=400&q=80" alt="View from Window" className="rounded-lg shadow-md w-72 h-48 object-cover" />
+        </div>
+        <h2 className="text-2xl font-bold mb-4 text-center w-full">Book your stay</h2>
+        <Calendar
+          onChange={setDate as any}
+          value={date as any}
+          selectRange={true}
+          tileDisabled={tileDisabled}
+        />
+        <button
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={handleBook}
+        >
+          Book Selected Dates
+        </button>
+        <div className="mt-4">
+          <h2 className="font-semibold">Booked Dates:</h2>
+          <ul>
+            {bookedDates.map((d, i) => (
+              <li key={i}>{d.toDateString()}</li>
+            ))}
+          </ul>
         </div>
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
