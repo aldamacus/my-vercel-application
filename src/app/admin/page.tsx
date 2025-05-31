@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Script from "next/script";
+import Link from "next/link";
 
 // Dummy data for demonstration
 const bookings = [
@@ -91,8 +91,8 @@ export default function AdminPage() {
 						Login as Admin
 					</button>
 				</form>
-				<a href="/" className="mt-4 text-blue-600 underline hover:text-blue-800">Back</a>
-			</div>
+				<Link href="/" className="mt-4 text-blue-600 underline hover:text-blue-800">Back</Link>
+                </div>
 		);
 
 	return (
