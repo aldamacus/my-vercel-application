@@ -27,7 +27,6 @@ const allowedAdmins = [{ email: "al.damacus@gmail.com", password: "adminpass123"
 export default function AdminPage() {
 	const [selectedTab, setSelectedTab] = useState("bookings");
 	const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-	const [loading, setLoading] = useState(false);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [error, setError] = useState("");

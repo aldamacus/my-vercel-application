@@ -8,8 +8,12 @@ import { AirbnbCalendarClient } from "@/clients/airbnb-calendar-client";
 import { BookingCalendarClient } from "@/clients/booking-calendar-client";
 import { HomeAwayCalendarClient } from "@/clients/homeaway-calendar-client";
 
+// Define Value type locally based on react-calendar's types
+// Value = Date | [Date, Date] | null
+type CalendarValue = Date | [Date, Date] | null;
+
 export default function BookYourStay() {
-  const [date, setDate] = useState<Date | [Date, Date] | null>(new Date());
+  const [date, setDate] = useState<CalendarValue | null>(new Date());
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
 
   // Keep a ref to avoid stale closure in interval
@@ -71,7 +75,6 @@ export default function BookYourStay() {
 
   return (
     <div className="flex flex-col items-center min-h-screen p-8 gap-8">
-      {/* Social/booking links in upper left with icons */}
       <div className="absolute left-8 top-8 flex gap-4 z-10">
         <a href="https://www.airbnb.com/rooms/29024999?guests=1&adults=1&s=67&unique_share_id=8d98beea-95de-435b-932e-fe4ffcec89ad" target="_blank" rel="noopener noreferrer" title="Airbnb">
           <Image src="/airbnb-color-svgrepo-com.svg" alt="Airbnb" width={32} height={32} className="hover:scale-110 transition-transform" />
@@ -84,14 +87,13 @@ export default function BookYourStay() {
         </a>
       </div>
       <h1 className="text-3xl font-bold mb-4">Central Am Bruckenthal Apartment</h1>
-      <div className="flex flex-wrap gap-4 justify-center mb-8">
-        {photos.map((src, i) => (
-          <Image key={i} src={src} alt={`Apartment photo ${i+1}`} width={250} height={180} className="rounded shadow-md object-cover" />
-        ))}
-      </div>
+    <div className="flex flex-wrap gap-4 justify-center mb-8">
+      {photos.map((src, i) => (
+        <Image key={i} src={src} alt={`Apartment photo ${i + 1}`} width={250} height={180} className="rounded shadow-md object-cover" />
+      ))}
       <Calendar
-        onChange={setDate as any}
-        value={date as any}
+        onChange={(value) => setDate(value as Date | [Date, Date] | null)}
+        value={date as Date | [Date, Date] | null}
         selectRange={true}
         tileDisabled={tileDisabled}
       />
@@ -104,11 +106,14 @@ export default function BookYourStay() {
       <div className="mt-4">
         <h2 className="font-semibold">Booked Dates:</h2>
         <ul>
-          {bookedDates.map((d, i) => (
-            <li key={i}>{d.toDateString()}</li>
-          ))}
+        {bookedDates.map((d, i) => (
+          <li key={i}>{d.toDateString()}</li>
+        ))}
         </ul>
       </div>
     </div>
+    </div>
+     
   );
+  
 }
