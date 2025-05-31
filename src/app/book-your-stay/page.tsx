@@ -76,7 +76,7 @@ export default function BookYourStay() {
         <a href="https://www.airbnb.com/rooms/29024999?guests=1&adults=1&s=67&unique_share_id=8d98beea-95de-435b-932e-fe4ffcec89ad" target="_blank" rel="noopener noreferrer" title="Airbnb">
           <Image src="/airbnb-color-svgrepo-com.svg" alt="Airbnb" width={32} height={32} className="hover:scale-110 transition-transform" />
         </a>
-        <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" title="Instagram">
+        <a href="https://instagram.com/central_am_brukenthal" target="_blank" rel="noopener noreferrer" title="Instagram">
           <Image src="/instagram-svgrepo-com.svg" alt="Instagram" width={32} height={32} className="hover:scale-110 transition-transform" />
         </a>
         <a href="https://www.booking.com/Share-HyJ79e" target="_blank" rel="noopener noreferrer" title="Booking.com">
