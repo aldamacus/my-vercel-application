@@ -4,7 +4,7 @@ import Image from "next/image";
 export default function Home() {
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-between p-0 bg-gradient-to-br from-blue-100 via-white to-yellow-100"
+      className="flex min-h-screen flex-col items-center justify-between p-0 bg-linear-to-br from-blue-100 via-white to-yellow-100"
       style={{
         backgroundImage:
           "url('https://images.unsplash.com/photo-1590631196293-61172b43d06d?auto=format&fit=crop&w=1200&q=80')",

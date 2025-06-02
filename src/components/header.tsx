@@ -1,9 +1,9 @@
 import Link from "next/link";
 
-export default function Header({ font }: { font: string }) {
+export default function Header({ font = "" }: { font?: string }) {
   return (
     <header className={`py-2 bg-gray-900 text-gray-100 ${font}`}>
-      <div className="max-w-[100rem] px-12 mx-auto flex justify-between items-center">
+      <div className="max-w-400 px-12 mx-auto flex justify-between items-center">
         <Link href="/book-your-stay">
           <h2 className={`text-xl font-bold text-gray-100 ${font}`}>
             Book your stay

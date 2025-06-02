@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import React, { useState } from "react";
-import { Calendar as ShadCalendar } from "@/components/ui/calendar";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/style.css";
 import {
   Carousel,
   CarouselContent,
@@ -14,10 +15,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
-type CalendarValue = Date | [Date, Date] | null;
 
 export default function BookYourStay() {
-  const [date, setDate] = useState<CalendarValue | undefined>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
 
   const handleBook = () => {
@@ -150,10 +150,10 @@ export default function BookYourStay() {
         {/* Calendar (middle) and Booked Dates (right) */}
         <div className="md:w-1/2 w-full flex flex-col md:flex-row gap-6 items-start justify-center">
           <div className="w-full md:w-2/3 flex flex-col items-center bg-white rounded-2xl shadow-lg p-6 border-2 border-[#FF5A5F]">
-            <ShadCalendar
-              mode="range"
-              selected={date as any}
-              onSelect={setDate as any}
+            <DayPicker
+              mode="single"
+              selected={date}
+              onSelect={setDate}
               disabled={disabled}
               className="rounded-lg border-2 border-[#FF5A5F] shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] text-gray-900"
             />
