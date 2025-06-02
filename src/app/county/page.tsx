@@ -12,8 +12,9 @@ export default function County() {
         heritage.
       </p>
       <p className="text-lg mb-4">
-        Whether you're interested in hiking, exploring historical sites, or
-        enjoying local cuisine, there's something for everyone in Sibiu County.
+        Whether you&aposre interested in hiking, exploring historical sites, or
+        enjoying local cuisine, there&aposs something for everyone in Sibiu
+        County.
       </p>
       <p className="text-lg mb-4">
         Discover the magic of Sibiu County and create unforgettable memories in
@@ -22,13 +23,13 @@ export default function County() {
       <p className="text-lg mb-4">
         <span className="font-semibold">Sibiu County</span> is known for its
         picturesque villages, fortified churches, and vibrant cultural
-        festivals. Don't miss the chance to experience the warmth and
+        festivals. Don&apost miss the chance to experience the warmth and
         hospitality of the local communities.
       </p>
       <p className="text-lg mb-4">
-        Whether you're here for a short visit or planning a longer stay, Sibiu
-        County promises an unforgettable experience filled with adventure and
-        discovery.
+        Whether you&aposre here for a short visit or planning a longer stay,
+        Sibiu County promises an unforgettable experience filled with adventure
+        and discovery.
       </p>
     </div>
   );
