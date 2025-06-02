@@ -60,51 +60,6 @@ export default function BookYourStay() {
 
   return (
     <div className="py-12 flex flex-col items-center justify-center min-h-screen px-100">
-      <div className="absolute top-20 left-20 flex gap-2 items-center z-10">
-        <a
-          href="https://www.airbnb.com/rooms/29024999?guests=1&adults=1&s=67&unique_share_id=8d98beea-95de-435b-932e-fe4ffcec89ad"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Airbnb"
-        >
-          <Image
-            src="/airbnb-color-svgrepo-com.svg"
-            alt="Airbnb"
-            width={32}
-            height={32}
-            className="hover:scale-110 transition-transform"
-          />
-        </a>
-        <a
-          href="https://instagram.com/central_am_brukenthal"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Instagram"
-        >
-          <Image
-            src="/instagram-svgrepo-com.svg"
-            alt="Instagram"
-            width={32}
-            height={32}
-            className="hover:scale-110 transition-transform"
-          />
-        </a>
-        <a
-          href="https://www.booking.com/Share-HyJ79e"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Booking.com"
-        >
-          <Image
-            src="/booking-svgrepo-com.svg"
-            alt="Booking.com"
-            width={32}
-            height={32}
-            className="hover:scale-110 transition-transform"
-          />
-        </a>
-      </div>
-
       <h1 className="text-3xl font-bold mb-4">Central Am Brukenthal</h1>
       <Carousel>
         <CarouselContent>
@@ -144,7 +99,7 @@ export default function BookYourStay() {
             <li>Quiet, safe building in the heart of Sibiu</li>
             <li>Walking distance to Bruckenthal Palace, cafes, and markets</li>
             <li>Self check-in and flexible checkout</li>
-            <li>Perfect for couples, solo travelers, or business guests</li>
+            <li>Perfect for couples, solo travelers</li>
           </ul>
         </div>
         {/* Calendar (middle) and Booked Dates (right) */}

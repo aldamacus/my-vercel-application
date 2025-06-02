@@ -17,7 +17,7 @@ export default function RootLayout({
     <html lang="en" className={inter.className}>
       <body>
         <Header />
-        <div className="bg-amber-200 py-24">{children}</div>
+        <div className="bg-amber-50 py-23">{children}</div>
         <Footer></Footer>
       </body>
     </html>
