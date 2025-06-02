@@ -1,47 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
-import { AirbnbCalendarClient } from "@/clients/airbnb-calendar-client";
-import { BookingCalendarClient } from "@/clients/booking-calendar-client";
-import { HomeAwayCalendarClient } from "@/clients/homeaway-calendar-client";
+import React, { useState } from "react";
+import { Calendar as ShadCalendar } from "@/components/ui/calendar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
 type CalendarValue = Date | [Date, Date] | null;
 
 export default function BookYourStay() {
-  const [date, setDate] = useState<CalendarValue | null>(new Date());
+  const [date, setDate] = useState<CalendarValue | undefined>(new Date());
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
-
-  // Keep a ref to avoid stale closure in interval
-  const setBookedDatesRef = useRef(setBookedDates);
-  setBookedDatesRef.current = setBookedDates;
-
-  useEffect(() => {
-    // Merge all booked dates from all clients
-    function updateCalendar(newDates: Date[]) {
-      setBookedDatesRef.current((prev) => {
-        const all = [...prev, ...newDates];
-        // Remove duplicates by date string
-        const unique = Array.from(new Set(all.map((d) => d.toDateString()))).map((ds) => new Date(ds));
-        return unique;
-      });
-    }
-    const airbnbClient = new AirbnbCalendarClient(updateCalendar);
-    const bookingClient = new BookingCalendarClient(updateCalendar);
-    const homeAwayClient = new HomeAwayCalendarClient(updateCalendar);
-    airbnbClient.start();
-    bookingClient.start();
-    homeAwayClient.start();
-    return () => {
-      airbnbClient.stop();
-      bookingClient.stop();
-      homeAwayClient.stop();
-    };
-  }, []);
 
   const handleBook = () => {
     if (Array.isArray(date) && date.length === 2) {
@@ -50,70 +27,195 @@ export default function BookYourStay() {
       const days: Date[] = [];
       const current = new Date(start);
       while (current <= end) {
-        if (!bookedDates.some((bd) => bd.toDateString() === current.toDateString())) {
+        if (
+          !bookedDates.some(
+            (bd) => bd.toDateString() === current.toDateString()
+          )
+        ) {
           days.push(new Date(current));
         }
         current.setDate(current.getDate() + 1);
       }
       setBookedDates([...bookedDates, ...days]);
     } else if (date instanceof Date) {
-      if (!bookedDates.some((bd) => bd.toDateString() === date.toDateString())) {
+      if (
+        !bookedDates.some((bd) => bd.toDateString() === date.toDateString())
+      ) {
         setBookedDates([...bookedDates, date]);
       }
     }
   };
 
-  const tileDisabled = ({ date: d }: { date: Date }) =>
-    bookedDates.some((bd) => bd.toDateString() === d.toDateString());
+  // For shadcn Calendar, disabled is (date: Date) => boolean
+  const disabled = (date: Date) =>
+    bookedDates.some((bd) => bd.toDateString() === date.toDateString());
 
-  // Dummy photos
+  // Sample photos for the apartment
   const photos = [
-    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
-    "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?auto=format&fit=crop&w=400&q=80"
+    "/sufra.jpeg",
+    "/sufra2.jpeg",
+    "/bucatarie1.jpeg",
+    "/bucatarie2.jpeg",
   ];
 
   return (
-    <div className="flex flex-col items-center min-h-screen p-8 gap-8">
-      <div className="absolute left-8 top-8 flex gap-4 z-10">
-        <a href="https://www.airbnb.com/rooms/29024999?guests=1&adults=1&s=67&unique_share_id=8d98beea-95de-435b-932e-fe4ffcec89ad" target="_blank" rel="noopener noreferrer" title="Airbnb">
-          <Image src="/airbnb-color-svgrepo-com.svg" alt="Airbnb" width={32} height={32} className="hover:scale-110 transition-transform" />
+    <div className="py-12 flex flex-col items-center justify-center min-h-screen px-100">
+      <div className="absolute top-20 left-20 flex gap-2 items-center z-10">
+        <a
+          href="https://www.airbnb.com/rooms/29024999?guests=1&adults=1&s=67&unique_share_id=8d98beea-95de-435b-932e-fe4ffcec89ad"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Airbnb"
+        >
+          <Image
+            src="/airbnb-color-svgrepo-com.svg"
+            alt="Airbnb"
+            width={32}
+            height={32}
+            className="hover:scale-110 transition-transform"
+          />
         </a>
-        <a href="https://instagram.com/central_am_brukenthal" target="_blank" rel="noopener noreferrer" title="Instagram">
-          <Image src="/instagram-svgrepo-com.svg" alt="Instagram" width={32} height={32} className="hover:scale-110 transition-transform" />
+        <a
+          href="https://instagram.com/central_am_brukenthal"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Instagram"
+        >
+          <Image
+            src="/instagram-svgrepo-com.svg"
+            alt="Instagram"
+            width={32}
+            height={32}
+            className="hover:scale-110 transition-transform"
+          />
         </a>
-        <a href="https://www.booking.com/Share-HyJ79e" target="_blank" rel="noopener noreferrer" title="Booking.com">
-          <Image src="/booking-svgrepo-com.svg" alt="Booking.com" width={32} height={32} className="hover:scale-110 transition-transform" />
+        <a
+          href="https://www.booking.com/Share-HyJ79e"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Booking.com"
+        >
+          <Image
+            src="/booking-svgrepo-com.svg"
+            alt="Booking.com"
+            width={32}
+            height={32}
+            className="hover:scale-110 transition-transform"
+          />
         </a>
       </div>
-      <h1 className="text-3xl font-bold mb-4">Central Am Bruckenthal Apartment</h1>
-    <div className="flex flex-wrap gap-4 justify-center mb-8">
-      {photos.map((src, i) => (
-        <Image key={i} src={src} alt={`Apartment photo ${i + 1}`} width={250} height={180} className="rounded shadow-md object-cover" />
-      ))}
-      <Calendar
-        onChange={(value) => setDate(value as Date | [Date, Date] | null)}
-        value={date as Date | [Date, Date] | null}
-        selectRange={true}
-        tileDisabled={tileDisabled}
-      />
-      <button
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        onClick={handleBook}
-      >
-        Book Selected Dates
-      </button>
-      <div className="mt-4">
-        <h2 className="font-semibold">Booked Dates:</h2>
-        <ul>
-        {bookedDates.map((d, i) => (
-          <li key={i}>{d.toDateString()}</li>
-        ))}
-        </ul>
+
+      <h1 className="text-3xl font-bold mb-4">Central Am Brukenthal</h1>
+      <Carousel>
+        <CarouselContent>
+          {photos.map((src, index) => (
+            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+              <div className="p-1">
+                <Card>
+                  <CardContent className="flex aspect-square items-center justify-center p-6">
+                    <Image
+                      src={src}
+                      alt={`Apartment photo ${index + 1}`}
+                      width={250}
+                      height={180}
+                      className="rounded shadow-md object-cover"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious />
+        <CarouselNext />
+      </Carousel>
+      <div className="flex flex-col md:flex-row gap-16 w-full max-w-4xl items-baseline-last justify-center mt-4">
+        {/* Details about the house (left side) */}
+        <div className="md:w-1/2 w-full bg-white/80 rounded-xl shadow-lg p-6 mb-6 md:mb-0">
+          <h2 className="text-2xl font-bold mb-2 text-blue-800">
+            About the Apartment
+          </h2>
+          <ul className="list-disc pl-5 text-gray-700 text-base space-y-2">
+            <li>Spacious living room with lots of natural light</li>
+            <li>Fully equipped modern kitchen</li>
+            <li>Comfortable queen-size bed and cozy linens</li>
+            <li>High-speed Wi-Fi and smart TV</li>
+            <li>Central heating and air conditioning</li>
+            <li>Quiet, safe building in the heart of Sibiu</li>
+            <li>Walking distance to Bruckenthal Palace, cafes, and markets</li>
+            <li>Self check-in and flexible checkout</li>
+            <li>Perfect for couples, solo travelers, or business guests</li>
+          </ul>
+        </div>
+        {/* Calendar (middle) and Booked Dates (right) */}
+        <div className="md:w-1/2 w-full flex flex-col md:flex-row gap-6 items-start justify-center">
+          <div className="w-full md:w-2/3 flex flex-col items-center bg-white rounded-2xl shadow-lg p-6 border-2 border-[#FF5A5F]">
+            <ShadCalendar
+              mode="range"
+              selected={date as any}
+              onSelect={setDate as any}
+              disabled={disabled}
+              className="rounded-lg border-2 border-[#FF5A5F] shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] text-gray-900"
+            />
+            <button
+              className="mt-6 w-full px-6 py-3 bg-[#FF5A5F] text-white font-bold rounded-lg shadow-lg hover:bg-[#e14c50] transition-all text-lg tracking-wide"
+              onClick={handleBook}
+            >
+              <span className="flex items-center gap-2 justify-center">
+                <Image
+                  src="/airbnb-color-svgrepo-com.svg"
+                  alt="Airbnb"
+                  width={24}
+                  height={24}
+                />
+                Book Selected Dates
+              </span>
+            </button>
+          </div>
+          {/* Booked Dates (right of calendar) */}
+          <div className="w-full md:w-1/3 flex flex-col items-start bg-white/90 rounded-2xl shadow-lg p-6 border border-gray-200 min-h-[320px]">
+            <h2 className="font-semibold text-lg mb-2 text-blue-800">
+              Booked Dates
+            </h2>
+            {bookedDates.length === 0 ? (
+              <p className="text-gray-500 mb-2">
+                No bookings yet. Be the first!
+              </p>
+            ) : (
+              <ul className="mb-2 space-y-1">
+                {bookedDates.map((d, i) => (
+                  <li
+                    key={i}
+                    className="text-gray-700 text-sm flex items-center gap-2"
+                  >
+                    <span className="inline-block w-2 h-2 rounded-full bg-[#FF5A5F]"></span>
+                    {d.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="mt-2 text-gray-700 text-sm">
+              <span className="font-semibold">Total nights booked:</span>{" "}
+              {bookedDates.length}
+            </div>
+            <div className="mt-1 text-gray-700 text-sm">
+              <span className="font-semibold">Estimated total:</span> €
+              {bookedDates.length * 55 || 0}{" "}
+              <span className="text-xs text-gray-400">
+                (dummy rate: €55/night)
+              </span>
+            </div>
+            <div className="mt-4 text-xs text-gray-500">
+              Booked dates are blocked for new reservations. For special
+              requests, contact us directly!
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    </div>
-     
   );
-  
 }
