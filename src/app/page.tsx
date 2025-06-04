@@ -1,22 +1,94 @@
 import Image from "next/image";
 
 export default function Home() {
+  // Only 5 images in total, distributed as described
   return (
-    <main
-      className="pt-1  items-baseline justify-between bg-center from-blue-100 via-white to-yellow-100"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1590631196293-61172b43d06d?auto=format&fit=crop&w=1200&q=80')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Header with navigation tabs */}
-
-      <section className="flex flex-col md:flex-row items-center justify-center w-full max-w-6xl gap-12 px-8 py-16">
-        {/* Left: Description & CTA */}
-        <div className="flex-1 flex flex-col items-start justify-center gap-6 bg-white/80 rounded-2xl shadow-xl p-8">
+    <main className="pt-1 items-baseline justify-between bg-white">
+      <section className="flex justify-center w-full">
+        <div
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 py-16 w-full max-w-6xl"
+          style={{ maxWidth: "65vw" }}
+        >
+          {/* Info block above the first column */}
+          <div className="md:col-span-3 flex columns-2 justify-center w-full flex-col items-baseline pt-10 pb-5 mb-8">
+            <div className="text-left text-4xl font-semibold text-blue-800">
+              Central am Brukenthal
+            </div>
+            <div className="text-left font-normal text-gray-700 mt-3">
+              <div className="font-bold text-blue-900 mb-1">
+                Beautifully historic flat in downtown
+              </div>
+              <div>
+                Samuel von Brukenthal, No. 1, Ap 6, Sibiu Old Town, Sibiu, Romania
+                <br />
+                Excellent location – show map
+              </div>
+            </div>
+          </div>
+          {/* First column: one large image */}
+          <div className="col-span-1 flex flex-col gap-4">
+            <div className="w-full h-[36rem] rounded-xl overflow-hidden shadow-2xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+              <Image
+                src="/163426986.jpg"
+                alt="Apartment highlight 1"
+                width={800}
+                height={1200}
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                priority
+              />
+            </div>
+          </div>
+          {/* Second column: two stacked images */}
+          <div className="col-span-1 flex flex-col gap-4">
+            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+              <Image
+                src="/163308132.jpg"
+                alt="Apartment highlight 2"
+                width={600}
+                height={400}
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                priority={false}
+              />
+            </div>
+            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+              <Image
+                src="/175330372.jpg"
+                alt="Apartment highlight 3"
+                width={600}
+                height={400}
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                priority={false}
+              />
+            </div>
+          </div>
+          {/* Third column: two stacked images */}
+          <div className="col-span-1 flex flex-col gap-4">
+            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+              <Image
+                src="/175330474.jpg"
+                alt="Apartment highlight 4"
+                width={600}
+                height={400}
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                priority={false}
+              />
+            </div>
+            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+              <Image
+                src="/175330495.jpg"
+                alt="Apartment highlight 5"
+                width={600}
+                height={400}
+                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                priority={false}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+      {/* Description at the bottom as before */}
+      <section className="w-full flex justify-center mt-8">
+        <div className="bg-white/80 rounded-2xl shadow-xl p-8 max-w-3xl">
           <h1 className="text-5xl font-extrabold mb-2 text-blue-900 drop-shadow-lg">
             Welcome!
           </h1>
@@ -44,20 +116,11 @@ export default function Home() {
             <span className="font-semibold">
               Stay in a beautiful apartment in Sibiu, close to many cafes and
               restaurants. Enjoy the city&apos;s rich history and vibrant
-              culture.
+              culture, then retreat to the comfort of your modern apartment.
+              Central am Bruckenthal is more than a place to stay; it&apos;s
+              your home away from home in Romania.
             </span>
           </p>
-        </div>
-        {/* Right: Apartment Image */}
-        <div className="static w-full md:w-1/2 max-w-md">
-          <Image
-            src="/163308128.jpg"
-            alt="Apartment Living Room"
-            width={480}
-            height={340}
-            className="rounded-2xl shadow-2xl object-cover border-4 border-white absolute inset-y-60 right-0 w-120"
-            priority
-          />
         </div>
       </section>
     </main>
