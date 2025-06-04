@@ -1,9 +1,13 @@
+"use client";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function Home() {
+  const [expanded, setExpanded] = useState(false);
   // Only 5 images in total, distributed as described
   return (
     <main className="pt-1 items-baseline justify-between bg-white">
+      {/* ...gallery section... */}
       <section className="flex justify-center w-full">
         <div
           className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 py-16 w-full max-w-6xl"
@@ -19,9 +23,17 @@ export default function Home() {
                 Beautifully historic flat in downtown
               </div>
               <div>
-                Samuel von Brukenthal, No. 1, Ap 6, Sibiu Old Town, Sibiu, Romania
+                Samuel von Brukenthal, No. 1, Ap 6, Sibiu Old Town, Sibiu,
+                Romania
                 <br />
-                Excellent location – show map
+                <a
+                  href="https://maps.app.goo.gl/n9sN3Bf35QJsCd2Y9"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-700 underline hover:text-blue-900 font-semibold"
+                >
+                  Excellent location – show map
+                </a>
               </div>
             </div>
           </div>
@@ -87,39 +99,78 @@ export default function Home() {
         </div>
       </section>
       {/* Description at the bottom as before */}
-      <section className="w-full flex justify-center mt-8">
-        <div className="bg-white/80 rounded-2xl shadow-xl p-8 max-w-3xl">
-          <h1 className="text-5xl font-extrabold mb-2 text-blue-900 drop-shadow-lg">
-            Welcome!
-          </h1>
+      <section className="flex justify-center w-full">
+        <div className="bg-white/80 rounded-2xl shadow-xl p-8 max-w-7xl w-full">
           <h2 className="text-2xl font-semibold mb-4 text-blue-700">
             A Home in the Heart of the City
           </h2>
-          <p className="text-lg text-gray-700 mb-4 max-w-xl">
-            Welcome to your dream apartment in the heart of Sibiu, Romania!
-            Nestled just steps away from the historic Bruckenthal Palace, this
-            cozy and modern space offers the perfect blend of comfort and
-            culture. Enjoy morning coffee with a view of cobblestone streets,
-            explore vibrant local markets, and relax in a sunlit living room
-            after a day of adventure. Whether you&apos;re here for business or
-            leisure, Central am Bruckenthal is your gateway to the best of
-            Sibiu.
-            <br />
-            <br />
-            <span className="font-semibold">Sibiu</span> is a city where history
-            meets vibrancy. Known for its colorful squares, medieval walls, and
-            lively festivals, Sibiu is the proud home of the famous Christmas
-            Market and a UNESCO World Heritage site. Discover the charm of
-            Transylvania right outside your door!
-            <br />
-            <br />
-            <span className="font-semibold">
-              Stay in a beautiful apartment in Sibiu, close to many cafes and
-              restaurants. Enjoy the city&apos;s rich history and vibrant
-              culture, then retreat to the comfort of your modern apartment.
-              Central am Bruckenthal is more than a place to stay; it&apos;s
-              your home away from home in Romania.
-            </span>
+          <div className="relative">
+            <p
+              className={`text-lg text-gray-700 mb-4 max-w-xl transition-all duration-300 ease-in-out ${
+                expanded ? "" : "max-h-[10rem] overflow-hidden line-clamp-2"
+              }`}
+              style={{
+                display: "-webkit-box",
+                WebkitLineClamp: expanded ? "none" : 10,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              Welcome to Central am Brukenthal, your cozy haven set in the
+              enchanting heart of Sibiu&apos;s Old Town. Here, you&apos;ll find
+              an inviting atmosphere that feels just like home. As the summer
+              heat envelops the city, our apartment remains a refreshing
+              retreat, maintaining a perfect temperature that ensures a
+              comfortable night&apos;s sleep, even on the warmest of evenings.
+              <br />
+              <br />
+              Imagine unwinding on your private terrace, sipping a cool drink
+              while soaking in the lively ambiance of the bustling streets
+              below. With fast and free WiFi, you can easily share your
+              delightful experiences with friends and family or catch up on your
+              favorite shows on the flat-screen TV after a day of exploration.
+              <br />
+              <br />
+              Our beautifully renovated space boasts a warm and cozy bedroom
+              that invites rest, alongside a modern bathroom stocked with
+              complimentary toiletries and a hairdryer. The fully equipped
+              kitchen is perfect for whipping up a casual meal to enjoy at your
+              own pace.
+            </p>
+            {!expanded && (
+              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+            )}
+            <button
+              className="text-blue-700 font-semibold underline hover:text-blue-900 transition-colors mt-2"
+              onClick={() => setExpanded((v) => !v)}
+            >
+              {expanded ? "Show less" : "Read more"}
+            </button>
+          </div>
+          <br />
+          <br />
+
+          <h3 className="text-2xl font-semibold mb-4 text-blue-700">
+            About this property
+          </h3>
+          <p className="text-lg text-gray-700">
+            About this property Reliable info: Guests say the description and
+            photos for this property are very accurate.
+            <strong className="block mt-2 mb-1">
+              Comfortable Living Space:
+            </strong>
+            Central am Brukenthal in Sibiu offers a one-bedroom apartment with a
+            terrace and free WiFi. The ground-floor unit features a kitchenette,
+            dining area, and a sofa bed.
+            <strong className="block mt-2 mb-1">Modern Amenities:</strong>
+            Guests enjoy a fully equipped kitchen with a refrigerator, stovetop,
+            microwave, and coffee machine. Additional amenities include a
+            terrace, patio, outdoor furniture, and a dining table.
+            <strong className="block mt-2 mb-1">Convenient Location:</strong>
+            Located 2.5 mi from Sibiu International Airport, the apartment is
+            near attractions such as The Stairs Passage (a few steps), The
+            Council Tower of Sibiu (3-minute walk), and Piata Mare Sibiu (656
+            feet). Highly rated for its central location and room cleanliness.
           </p>
         </div>
       </section>

@@ -29,6 +29,7 @@ export default function Header({ font = "" }: { font?: string }) {
               Book your stay {">"}
             </Link>
             <img src="/beds-bedroom-svgrepo-com.svg" width={24} height={24} />
+
             <Link
               href="/county"
               className=" text-xl font-semibold hover:text-yellow-400 transition-colors"
@@ -83,6 +84,41 @@ export default function Header({ font = "" }: { font?: string }) {
             <span className="text-gray-700 text-sm">148 reviews</span>
             <span className="bg-white text-pink-600 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-pink-400">
               4.97
+            </span>
+          </div>
+        </a>
+        {/* Google style */}
+        <a
+          href="https://maps.app.goo.gl/3oA96HLrR2Jk7suf8"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-end bg-white/90 rounded-xl px-4 py-2 shadow-lg border border-green-200 hover:scale-105 transition-transform duration-200 w-40"
+        >
+          <span className="flex items-center gap-1 text-green-700 font-bold text-lg">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="text-yellow-400"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118l-3.385-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+            </svg>
+            Google
+          </span>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-gray-700 text-sm">29 reviews</span>
+            <span className="bg-white text-green-700 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-green-400 flex items-center gap-1">
+              4.9
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="text-yellow-400"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.178c.969 0 1.371 1.24.588 1.81l-3.385 2.46a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.385-2.46a1 1 0 00-1.175 0l-3.385 2.46c-.784.57-1.838-.196-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118l-3.385-2.46c-.783-.57-.38-1.81.588-1.81h4.178a1 1 0 00.95-.69l1.286-3.967z" />
+              </svg>
             </span>
           </div>
         </a>
