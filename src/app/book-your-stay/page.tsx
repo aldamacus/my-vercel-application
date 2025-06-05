@@ -99,7 +99,9 @@ export default function BookYourStay() {
     );
     if (alreadySelected) {
       setBookedDates(
-        bookedDates.filter((bd) => bd.toDateString() !== selected.toDateString())
+        bookedDates.filter(
+          (bd) => bd.toDateString() !== selected.toDateString()
+        )
       );
     } else if (bookedDates.length < 2) {
       setBookedDates([...bookedDates, selected]);
@@ -252,7 +254,13 @@ export default function BookYourStay() {
           </div>
           <div className="mt-4 text-xs text-gray-500">
             Booked dates are blocked for new reservations. For special requests,
-            contact us directly!
+            <a
+              href="mailto:central.brukenthal@gmail.com"
+              className="text-blue-700 underline hover:text-blue-900 ml-1"
+            >
+              contact us directly
+            </a>
+            !
           </div>
           <button
             className={`mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-lg tracking-wide ${
