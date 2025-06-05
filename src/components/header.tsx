@@ -49,7 +49,7 @@ export default function Header({ font = "" }: { font?: string }) {
               href="/in-the-area"
               className="hover:text-yellow-400 text-xl font-semibold transition-colors"
             >
-              In The Area {">"}
+              (Out & About| Local Hotspots| Go Out)
             </Link>
           )}
         </nav>

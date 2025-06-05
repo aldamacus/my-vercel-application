@@ -4,6 +4,12 @@ import Image from "next/image";
 
 const areaData = [
   {
+    title: "Oldies (Pub) but Goldies",
+    img: "/oldies.jpg",
+    desc: "Oldies Pub in Sibiu is one of the city’s most iconic nightlife spots, famous for its vibrant atmosphere and great music. Located right in the heart of the old town, Oldies is known for its retro-themed parties, live concerts, and energetic DJ nights that keep the dance floor packed until morning.",
+    map: "https://maps.app.goo.gl/4NFaxSGKNhdwydpB7",
+  },
+  {
     title: "Crama Sibiana",
     img: "/cramasibiana.jpg",
     desc: "Crama Sibiana is a beloved traditional restaurant located right in Sibiu’s historic center. Step into a cozy, vaulted cellar and enjoy authentic Romanian cuisine, hearty stews, grilled meats, and local wines. The friendly staff and live folk music create a warm, unforgettable atmosphere—perfect for a true taste of Transylvania.",
