@@ -26,7 +26,7 @@ export default function Header({ font = "" }: { font?: string }) {
               href="/book-your-stay"
               className={`flex items-center gap-2 text-xl  font-semibold transition-colors hover:text-yellow-400 text-gray-100 ${font}`}
             >
-              Book your stay {">"}
+              Book your stay
             </Link>
             <img src="/beds-bedroom-svgrepo-com.svg" width={24} height={24} />
 
@@ -34,7 +34,7 @@ export default function Header({ font = "" }: { font?: string }) {
               href="/county"
               className=" text-xl font-semibold hover:text-yellow-400 transition-colors"
             >
-              Visit our County {">"}
+              Visit our County
             </Link>
             <img src="/city-svgrepo-com.svg" width={24} height={24} />
           </div>
@@ -49,7 +49,7 @@ export default function Header({ font = "" }: { font?: string }) {
               href="/in-the-area"
               className="hover:text-yellow-400 text-xl font-semibold transition-colors"
             >
-              (Out & About| Local Hotspots| Go Out)
+              Out & About ● Local Hotspots ● Go Out
             </Link>
           )}
         </nav>
