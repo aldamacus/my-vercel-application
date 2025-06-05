@@ -12,6 +12,7 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
+import PaymentModal from "@/components/PaymentModal";
 
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
@@ -20,6 +21,7 @@ export default function BookYourStay() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   const handleBook = () => {
     if (Array.isArray(date) && date.length === 2) {
@@ -180,13 +182,6 @@ export default function BookYourStay() {
               onClick={handleBook}
             >
               <span className="flex items-center gap-2 justify-center">
-                {/*  <Image
-                  src="/airbnb-color-svgrepo-com.svg"
-                  alt="Airbnb"
-                  width={24}
-                  height={24}
-                />
-               */}
                 Book Selected Dates
               </span>
             </button>
@@ -230,8 +225,22 @@ export default function BookYourStay() {
             Booked dates are blocked for new reservations. For special requests,
             contact us directly!
           </div>
+          <button
+            className={`mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-lg tracking-wide ${
+              bookedDates.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            onClick={() => bookedDates.length > 0 && setShowPayment(true)}
+            disabled={bookedDates.length === 0}
+          >
+            Pay with PayPal
+          </button>
         </div>
       </div>
+      <PaymentModal
+        open={showPayment}
+        onClose={() => setShowPayment(false)}
+        amount={bookedDates.length * 30 || 0}
+      />
       {/* Details and Map side by side at the bottom */}
       <div className="w-full flex flex-col md:flex-row gap-8 mt-12">
         <div className="md:w-1/2 w-full bg-white/80 rounded-xl shadow-lg p-6 mb-6 md:mb-0 order-1 md:order-none">
