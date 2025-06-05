@@ -227,18 +227,33 @@ export default function Home() {
             <strong className="block mt-2 mb-1">
               Comfortable Living Space:
             </strong>
-            Central am Brukenthal in Sibiu offers a one-bedroom apartment with a
-            terrace and free WiFi. The ground-floor unit features a kitchenette,
-            dining area, and a sofa bed.
+            <ul className="list-disc pl-8 mb-2">
+              <li>
+                Central am Brukenthal in Sibiu offers a one-bedroom apartment
+                with a terrace and free WiFi. The ground-floor unit features a
+                kitchenette, dining area, and a sofa bed.
+              </li>
+            </ul>
             <strong className="block mt-2 mb-1">Modern Amenities:</strong>
-            Guests enjoy a fully equipped kitchen with a refrigerator, stovetop,
-            microwave, and coffee machine. Additional amenities include a
-            terrace, patio, outdoor furniture, and a dining table.
+            <ul className="list-disc pl-8 mb-2">
+              <li>
+                Guests enjoy a fully equipped kitchen with a refrigerator,
+                stovetop, microwave, and coffee machine. Additional amenities
+                include a terrace, patio, outdoor furniture, and a dining table.
+              </li>
+            </ul>
             <strong className="block mt-2 mb-1">Convenient Location:</strong>
-            Located 2.5 mi from Sibiu International Airport, the apartment is
-            near attractions such as The Stairs Passage (a few steps), The
-            Council Tower of Sibiu (3-minute walk), and Piata Mare Sibiu (656
-            feet). Highly rated for its central location and room cleanliness.
+            <ul className="list-disc pl-8 mb-2">
+              <li>
+                Located in the heart of Sibiu&apos;s Old Town, the apartment is
+                within walking distance of major attractions like Piata Mare and
+                the Brukenthal Palace.
+              </li>
+              Located 2.5 mi from Sibiu International Airport, the apartment is
+              near attractions such as The Stairs Passage (a few steps), The
+              Council Tower of Sibiu (3-minute walk), and Piata Mare Sibiu (656
+              feet). Highly rated for its central location and room cleanliness.
+            </ul>
           </p>
         </div>
       </section>
