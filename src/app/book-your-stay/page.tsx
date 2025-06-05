@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState } from "react";
-import { DayPicker } from "react-day-picker";
-import "react-day-picker/style.css";
+import React, { useEffect, useRef, useState } from "react";
+//import { DayPicker } from "react-day-picker";
+//import "react-day-picker/style.css";
 import {
   Carousel,
   CarouselContent,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import PaymentModal from "@/components/PaymentModal";
+import { Calendar } from "@/components/ui/calendar";
 
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
@@ -22,10 +23,38 @@ export default function BookYourStay() {
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Array for user-selected dates (not Airbnb booked dates)
+  const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
+
+  // Fetch Airbnb calendar and update bookedDates
+  const updateBookedDatesFromAirbnb = async () => {
+    try {
+      const res = await fetch("/api/airbnb-calendar");
+      const events = await res.json();
+      const dates: Date[] = [];
+      for (const event of events) {
+        if (event.type === "VEVENT" && event.start && event.end) {
+          // Add all dates in the range [start, end)
+          const current = new Date(event.start);
+          const end = new Date(event.end);
+          while (current < end) {
+            dates.push(new Date(current));
+            current.setDate(current.getDate() + 1);
+          }
+        }
+      }
+      setBookedDates(dates);
+    } catch (e) {
+      // Optionally handle error
+      console.error("Failed to fetch Airbnb calendar", e);
+    }
+  };
 
   // Only allow booking if less than 2 dates are selected
   const handleBook = () => {
-    if (bookedDates.length >= 2) return; // Prevent booking more than 2 dates
+    if (userSelectedDates.length >= 2) return; // Prevent booking more than 2 dates
     if (Array.isArray(date) && date.length === 2) {
       // Book a range
       const [start, end] = date;
@@ -33,36 +62,46 @@ export default function BookYourStay() {
       const current = new Date(start);
       while (current <= end) {
         if (
-          !bookedDates.some(
+          !userSelectedDates.some(
             (bd) => bd.toDateString() === current.toDateString()
-          )
+          ) &&
+          !disabled(current)
         ) {
           days.push(new Date(current));
         }
         current.setDate(current.getDate() + 1);
       }
       // Only add if total will not exceed 2
-      if (bookedDates.length + days.length <= 2) {
-        setBookedDates([...bookedDates, ...days]);
+      if (userSelectedDates.length + days.length <= 2) {
+        setUserSelectedDates([...userSelectedDates, ...days]);
       }
     } else if (date instanceof Date) {
-      const alreadySelected = bookedDates.some(
+      const alreadySelected = userSelectedDates.some(
         (bd) => bd.toDateString() === date.toDateString()
       );
       if (alreadySelected) {
         // Deselect if already selected
-        setBookedDates(
-          bookedDates.filter((bd) => bd.toDateString() !== date.toDateString())
+        setUserSelectedDates(
+          userSelectedDates.filter(
+            (bd) => bd.toDateString() !== date.toDateString()
+          )
         );
-      } else if (bookedDates.length < 2) {
-        setBookedDates([...bookedDates, date]);
+      } else if (userSelectedDates.length < 2 && !disabled(date)) {
+        setUserSelectedDates([...userSelectedDates, date]);
       }
     }
   };
 
   // For shadcn Calendar, disabled is (date: Date) => boolean
-  const disabled = (date: Date) =>
-    bookedDates.some((bd) => bd.toDateString() === date.toDateString());
+  const disabled = (date: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to midnight
+    // Disable if before today or already booked
+    return (
+      date < today ||
+      bookedDates.some((bd) => bd.toDateString() === date.toDateString())
+    );
+  };
 
   // Sample photos for the apartment
   const photos = [
@@ -90,24 +129,67 @@ export default function BookYourStay() {
     "/642276000.jpg",
   ];
 
-  // Update DayPicker to allow deselecting by clicking a selected date
-  // Instead of onSelect={setDate}, use a custom handler:
+  // Helper to check if a date is consecutive to the current selection
+  function isConsecutive(date: Date, selectedDates: Date[]): boolean {
+    if (selectedDates.length === 0) return true;
+    const sorted = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    const prevDay = new Date(last);
+    prevDay.setDate(last.getDate() + 1);
+    const nextDay = new Date(first);
+    nextDay.setDate(first.getDate() - 1);
+    // Allow adding only to the start or end of the range
+    return (
+      date.toDateString() === prevDay.toDateString() ||
+      date.toDateString() === nextDay.toDateString()
+    );
+  }
+
+  // Update Calendar to allow only consecutive selection
   const handleDateSelect = (selected: Date | undefined) => {
     if (!selected) return;
-    const alreadySelected = bookedDates.some(
+    const alreadySelected = userSelectedDates.some(
       (bd) => bd.toDateString() === selected.toDateString()
     );
     if (alreadySelected) {
-      setBookedDates(
-        bookedDates.filter(
-          (bd) => bd.toDateString() !== selected.toDateString()
-        )
+      // Allow deselecting only from the ends of the range
+      const sorted = [...userSelectedDates].sort(
+        (a, b) => a.getTime() - b.getTime()
       );
-    } else if (bookedDates.length < 2) {
-      setBookedDates([...bookedDates, selected]);
+      const first = sorted[0];
+      const last = sorted[sorted.length - 1];
+      if (
+        selected.toDateString() === first.toDateString() ||
+        selected.toDateString() === last.toDateString()
+      ) {
+        setUserSelectedDates(
+          userSelectedDates.filter(
+            (bd) => bd.toDateString() !== selected.toDateString()
+          )
+        );
+      }
+      // else: ignore (cannot deselect from the middle)
+    } else if (!disabled(selected)) {
+      // Only allow adding if consecutive
+      if (isConsecutive(selected, userSelectedDates)) {
+        setUserSelectedDates([...userSelectedDates, selected]);
+      }
+      // else: ignore (cannot select non-consecutive)
     }
     setDate(selected);
   };
+
+  useEffect(() => {
+    updateBookedDatesFromAirbnb();
+    intervalRef.current = setInterval(
+      updateBookedDatesFromAirbnb,
+      60 * 1000 // every 1 minute
+    );
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
   return (
     <div className="py-12 flex flex-col items-center justify-center min-h-screen px-100">
@@ -130,6 +212,12 @@ export default function BookYourStay() {
                       width={250}
                       height={180}
                       className="rounded shadow-md object-cover hover:scale-105 transition-transform duration-200"
+                      style={{
+                        width: "100%",
+                        height: "auto",
+                        aspectRatio: "4/3",
+                        objectFit: "cover",
+                      }}
                     />
                   </CardContent>
                 </Card>
@@ -184,20 +272,26 @@ export default function BookYourStay() {
       {/* Calendar and Booked Dates side by side in the middle */}
       <div className="w-full flex flex-col md:flex-row gap-8 items-stretch justify-center mt-8 max-w-6xl">
         <div className="md:w-1/2 w-full flex flex-col gap-6 items-center justify-center">
-          <div className="w-full max-w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-6 border-2 border-[#FF5A5F]">
-            <DayPicker
+          <div className="w-full max-w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-6 border-2 border-blue-200">
+            <Calendar
               mode="single"
               selected={date}
-              onSelect={handleDateSelect}
+              onDayClick={handleDateSelect}
               disabled={disabled}
+              showOutsideDays
               numberOfMonths={1}
-              className="rounded-lg border-2 border-[#FF5A5F] shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] text-gray-900 w-full"
+              className="rounded-lg border-2 border-blue-400 shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-blue-400 text-gray-900 w-full max-w-xl p-4"
               modifiers={{
                 booked: bookedDates,
+                selected: userSelectedDates,
+                today: [new Date()],
               }}
               modifiersClassNames={{
                 booked:
-                  "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700",
+                  "bg-gray-300   text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700",
+                selected: "bg-green-200 text-green-900 font-bold",
+                today:
+                  "bg-blue-200 text-blue-900 border-blue-700 border-2 font-bold",
               }}
               modifiersStyles={{
                 booked: {
@@ -205,53 +299,85 @@ export default function BookYourStay() {
                   color: "#6b7280", // Tailwind gray-500
                   cursor: "not-allowed",
                 },
+                selected: {
+                  backgroundColor: "#bbf7d0", // Tailwind green-200
+                  color: "#166534", // Tailwind green-900
+                  fontWeight: "bold",
+                },
+                today: {
+                  backgroundColor: "#bfdbfe", // Tailwind blue-200
+                  color: "#1e40af", // Tailwind blue-900
+                  border: "2px solid #1d4ed8", // Tailwind blue-700
+                  fontWeight: "bold",
+                },
+              }}
+              classNames={{
+                head_cell:
+                  "text-muted-foreground rounded-md w-14 h-14 font-normal text-base md:text-lg",
+                day: "size-14 h-14 w-14 p-0 font-semibold text-base md:text-lg aria-selected:opacity-100",
               }}
             />
+
             <button
-              className="mt-6 w-full px-6 py-3 bg-[#FF5A5F] text-white font-bold rounded-lg shadow-lg hover:bg-[#e14c50] transition-all text-lg tracking-wide"
-              onClick={handleBook}
-              disabled={bookedDates.length >= 2}
+              className="mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg on hover:shadow-2xl transition-all text-lg tracking-wide"
+              onClick={() => setUserSelectedDates([])}
+              disabled={userSelectedDates.length === 0}
             >
-              <span className="flex items-center gap-2 justify-center">
-                Book Selected Dates
+              <span className="flex items-center bg-blue-700 gap-2 justify-center">
+                Clear Selected Dates
               </span>
             </button>
           </div>
         </div>
         <div className="md:w-1/2 w-full flex flex-col items-start bg-white/90 rounded-2xl shadow-lg p-6 border border-gray-200 min-h-[320px] mt-6 md:mt-0">
           <h2 className="font-semibold text-lg mb-2 text-blue-800">
-            Booked Dates
+            Your Trip
           </h2>
-          {bookedDates.length === 0 ? (
-            <p className="text-gray-500 mb-2">No bookings yet. Be the first!</p>
+          <div className="mb-2 text-red-600 font-semibold text-sm">
+            A minimum stay of 2 nights is required.
+          </div>
+          {userSelectedDates.length === 0 ? (
+            <p className="text-gray-500 mb-2">
+              No dates selected yet. Pick your stay!
+            </p>
           ) : (
-            <ul className="mb-2 space-y-1">
-              {bookedDates.map((d, i) => (
-                <li
-                  key={i}
-                  className="text-gray-700 text-sm flex items-center gap-2"
-                >
-                  <span className="inline-block w-2 h-2 rounded-full bg-[#FF5A5F]"></span>
-                  {d.toLocaleDateString("en-GB", {
+            <>
+              {/* Dates from - till */}
+              <div className="mb-2 text-gray-700 text-base">
+                <span className="font-semibold">Dates:</span>{" "}
+                {(() => {
+                  const sorted = [...userSelectedDates].sort(
+                    (a, b) => a.getTime() - b.getTime()
+                  );
+                  const from = sorted[0];
+                  const till = sorted[sorted.length - 1];
+                  return `${from.toLocaleDateString("en-GB", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
-                  })}
-                </li>
-              ))}
-            </ul>
+                  })} - ${till.toLocaleDateString("en-GB", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                  })}`;
+                })()}
+              </div>
+              {/* Price Details */}
+              <div className="mb-2 mt-4">
+                <div className="font-semibold text-base mb-1">
+                  Price Details
+                </div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>€30 x {userSelectedDates.length} nights</span>
+                  <span>€{userSelectedDates.length * 30}</span>
+                </div>
+                <div className="flex justify-between text-base font-bold border-t pt-2 mt-2">
+                  <span>Total</span>
+                  <span>€{userSelectedDates.length * 30}</span>
+                </div>
+              </div>
+            </>
           )}
-          <div className="mt-2 text-gray-700 text-sm">
-            <span className="font-semibold">Total nights booked:</span>{" "}
-            {bookedDates.length}
-          </div>
-          <div className="mt-1 text-gray-700 text-sm">
-            <span className="font-semibold">Estimated total:</span> €
-            {bookedDates.length * 30 || 0}{" "}
-            <span className="text-xs text-gray-400">
-              (dummy rate: €30/night)
-            </span>
-          </div>
           <div className="mt-4 text-xs text-gray-500">
             Booked dates are blocked for new reservations. For special requests,
             <a
@@ -264,10 +390,14 @@ export default function BookYourStay() {
           </div>
           <button
             className={`mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-lg tracking-wide ${
-              bookedDates.length !== 2 ? "opacity-50 cursor-not-allowed" : ""
+              userSelectedDates.length < 2
+                ? "opacity-50 cursor-not-allowed"
+                : ""
             }`}
-            onClick={() => bookedDates.length === 2 && setShowPayment(true)}
-            disabled={bookedDates.length !== 2}
+            onClick={() =>
+              userSelectedDates.length >= 2 && setShowPayment(true)
+            }
+            disabled={userSelectedDates.length < 2}
           >
             Pay with PayPal
           </button>
@@ -276,7 +406,7 @@ export default function BookYourStay() {
       <PaymentModal
         open={showPayment}
         onClose={() => setShowPayment(false)}
-        amount={bookedDates.length * 30 || 0}
+        amount={userSelectedDates.length * 30 || 0}
       />
       {/* Details and Map side by side at the bottom */}
       <div className="w-full flex flex-col md:flex-row gap-8 mt-12">
