@@ -52,46 +52,6 @@ export default function BookYourStay() {
     }
   };
 
-  // Only allow booking if less than 2 dates are selected
-  const handleBook = () => {
-    if (userSelectedDates.length >= 2) return; // Prevent booking more than 2 dates
-    if (Array.isArray(date) && date.length === 2) {
-      // Book a range
-      const [start, end] = date;
-      const days: Date[] = [];
-      const current = new Date(start);
-      while (current <= end) {
-        if (
-          !userSelectedDates.some(
-            (bd) => bd.toDateString() === current.toDateString()
-          ) &&
-          !disabled(current)
-        ) {
-          days.push(new Date(current));
-        }
-        current.setDate(current.getDate() + 1);
-      }
-      // Only add if total will not exceed 2
-      if (userSelectedDates.length + days.length <= 2) {
-        setUserSelectedDates([...userSelectedDates, ...days]);
-      }
-    } else if (date instanceof Date) {
-      const alreadySelected = userSelectedDates.some(
-        (bd) => bd.toDateString() === date.toDateString()
-      );
-      if (alreadySelected) {
-        // Deselect if already selected
-        setUserSelectedDates(
-          userSelectedDates.filter(
-            (bd) => bd.toDateString() !== date.toDateString()
-          )
-        );
-      } else if (userSelectedDates.length < 2 && !disabled(date)) {
-        setUserSelectedDates([...userSelectedDates, date]);
-      }
-    }
-  };
-
   // For shadcn Calendar, disabled is (date: Date) => boolean
   const disabled = (date: Date) => {
     const today = new Date();
@@ -436,7 +396,8 @@ export default function BookYourStay() {
           ></iframe>
         </div>
       </div>
-      <script src="https://www.anrdoezrs.net/am/101457820/include/allCj/exclude/5096493/impressions/page/am.js"></script>
+      {/* Load external script asynchronously using next/script */}
+      {/* The following script is now loaded globally via layout.tsx using next/script. Remove this duplicate. */}
     </div>
   );
 }
