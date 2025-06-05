@@ -23,7 +23,9 @@ export default function BookYourStay() {
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
 
+  // Only allow booking if less than 2 dates are selected
   const handleBook = () => {
+    if (bookedDates.length >= 2) return; // Prevent booking more than 2 dates
     if (Array.isArray(date) && date.length === 2) {
       // Book a range
       const [start, end] = date;
@@ -39,11 +41,20 @@ export default function BookYourStay() {
         }
         current.setDate(current.getDate() + 1);
       }
-      setBookedDates([...bookedDates, ...days]);
+      // Only add if total will not exceed 2
+      if (bookedDates.length + days.length <= 2) {
+        setBookedDates([...bookedDates, ...days]);
+      }
     } else if (date instanceof Date) {
-      if (
-        !bookedDates.some((bd) => bd.toDateString() === date.toDateString())
-      ) {
+      const alreadySelected = bookedDates.some(
+        (bd) => bd.toDateString() === date.toDateString()
+      );
+      if (alreadySelected) {
+        // Deselect if already selected
+        setBookedDates(
+          bookedDates.filter((bd) => bd.toDateString() !== date.toDateString())
+        );
+      } else if (bookedDates.length < 2) {
         setBookedDates([...bookedDates, date]);
       }
     }
@@ -78,6 +89,23 @@ export default function BookYourStay() {
     "/175330725.jpg",
     "/642276000.jpg",
   ];
+
+  // Update DayPicker to allow deselecting by clicking a selected date
+  // Instead of onSelect={setDate}, use a custom handler:
+  const handleDateSelect = (selected: Date | undefined) => {
+    if (!selected) return;
+    const alreadySelected = bookedDates.some(
+      (bd) => bd.toDateString() === selected.toDateString()
+    );
+    if (alreadySelected) {
+      setBookedDates(
+        bookedDates.filter((bd) => bd.toDateString() !== selected.toDateString())
+      );
+    } else if (bookedDates.length < 2) {
+      setBookedDates([...bookedDates, selected]);
+    }
+    setDate(selected);
+  };
 
   return (
     <div className="py-12 flex flex-col items-center justify-center min-h-screen px-100">
@@ -158,7 +186,7 @@ export default function BookYourStay() {
             <DayPicker
               mode="single"
               selected={date}
-              onSelect={setDate}
+              onSelect={handleDateSelect}
               disabled={disabled}
               numberOfMonths={1}
               className="rounded-lg border-2 border-[#FF5A5F] shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] text-gray-900 w-full"
@@ -180,6 +208,7 @@ export default function BookYourStay() {
             <button
               className="mt-6 w-full px-6 py-3 bg-[#FF5A5F] text-white font-bold rounded-lg shadow-lg hover:bg-[#e14c50] transition-all text-lg tracking-wide"
               onClick={handleBook}
+              disabled={bookedDates.length >= 2}
             >
               <span className="flex items-center gap-2 justify-center">
                 Book Selected Dates
@@ -227,10 +256,10 @@ export default function BookYourStay() {
           </div>
           <button
             className={`mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-lg tracking-wide ${
-              bookedDates.length === 0 ? "opacity-50 cursor-not-allowed" : ""
+              bookedDates.length !== 2 ? "opacity-50 cursor-not-allowed" : ""
             }`}
-            onClick={() => bookedDates.length > 0 && setShowPayment(true)}
-            disabled={bookedDates.length === 0}
+            onClick={() => bookedDates.length === 2 && setShowPayment(true)}
+            disabled={bookedDates.length !== 2}
           >
             Pay with PayPal
           </button>
