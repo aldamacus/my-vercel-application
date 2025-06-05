@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import Script from "next/script";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,6 +48,11 @@ export default function RootLayout({
         <Header />
         <div className="bg-white-100">{children}</div>
         <Footer></Footer>
+        {/* Enable Deep Link Automation for your site */}
+        <Script
+          src="https://www.anrdoezrs.net/am/101457820/include/allCj/exclude/5096493/impressions/page/am.js"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
