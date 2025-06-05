@@ -40,6 +40,21 @@ export default function Header({ font = "" }: { font?: string }) {
           </div>
         )}
       </div>
+
+      {/* Centered navigation */}
+      <div className="flex-1 flex justify-center">
+        <nav className="flex gap-8 items-center">
+          {pathname == "/" && (
+            <Link
+              href="/in-the-area"
+              className="hover:text-yellow-400 text-xl font-semibold transition-colors"
+            >
+              In The Area {">"}
+            </Link>
+          )}
+        </nav>
+      </div>
+
       {/* Booking & Airbnb review scores */}
       <div className="flex flex-row gap-6 items-center ml-auto">
         {/* Booking.com style */}
@@ -47,12 +62,12 @@ export default function Header({ font = "" }: { font?: string }) {
           href="https://www.booking.com/Share-HyJ79e"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-end bg-white/90 rounded-xl px-4 py-2 shadow-lg border border-blue-200 hover:scale-105 transition-transform duration-200 w-40"
+          className="flex flex-col items-end bg-blue-900/90 rounded-xl px-4 py-2 shadow-lg border border-blue-800 hover:scale-105 transition-transform duration-200 w-40"
         >
-          <span className="text-blue-900 font-bold text-lg">Booking.com</span>
+          <span className="text-blue-100 font-bold text-lg">Booking.com</span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-gray-700 text-sm">114 reviews</span>
-            <span className="bg-white text-blue-900 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-blue-400">
+            <span className="text-blue-200 text-sm">114 reviews</span>
+            <span className="bg-blue-800 text-blue-100 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-blue-400">
               9.8
             </span>
           </div>
@@ -62,9 +77,9 @@ export default function Header({ font = "" }: { font?: string }) {
           href="https://www.airbnb.com/rooms/29024999?guests=1&adults=1&s=67&unique_share_id=8d98beea-95de-435b-932e-fe4ffcec89ad"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-end bg-white/90 rounded-xl px-4 py-2 shadow-lg border border-pink-200 hover:scale-105 transition-transform duration-200 w-40"
+          className="flex flex-col items-end bg-blue-900/90 rounded-xl px-4 py-2 shadow-lg border border-blue-800 hover:scale-105 transition-transform duration-200 w-40"
         >
-          <span className="flex items-center gap-1 text-pink-600 font-bold text-lg">
+          <span className="flex items-center gap-1 text-pink-200 font-bold text-lg">
             <svg
               width="18"
               height="18"
@@ -81,8 +96,8 @@ export default function Header({ font = "" }: { font?: string }) {
             Airbnb
           </span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-gray-700 text-sm">148 reviews</span>
-            <span className="bg-white text-pink-600 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-pink-400">
+            <span className="text-blue-200 text-sm">148 reviews</span>
+            <span className="bg-blue-800 text-pink-200 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-pink-400">
               4.97
             </span>
           </div>
@@ -92,9 +107,9 @@ export default function Header({ font = "" }: { font?: string }) {
           href="https://maps.app.goo.gl/3oA96HLrR2Jk7suf8"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-col items-end bg-white/90 rounded-xl px-4 py-2 shadow-lg border border-green-200 hover:scale-105 transition-transform duration-200 w-40"
+          className="flex flex-col items-end bg-blue-900/90 rounded-xl px-4 py-2 shadow-lg border border-blue-800 hover:scale-105 transition-transform duration-200 w-40"
         >
-          <span className="flex items-center gap-1 text-green-700 font-bold text-lg">
+          <span className="flex items-center gap-1 text-green-200 font-bold text-lg">
             <svg
               width="18"
               height="18"
@@ -107,8 +122,8 @@ export default function Header({ font = "" }: { font?: string }) {
             Google
           </span>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-gray-700 text-sm">29 reviews</span>
-            <span className="bg-white text-green-700 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-green-400 flex items-center gap-1">
+            <span className="text-blue-200 text-sm">29 reviews</span>
+            <span className="bg-blue-800 text-green-200 font-bold text-xl px-3 py-1 rounded-lg shadow border-2 border-green-400 flex items-center gap-1">
               4.9
               <svg
                 width="16"

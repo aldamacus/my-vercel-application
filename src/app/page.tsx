@@ -1,9 +1,21 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const [expanded, setExpanded] = useState(false);
+  const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+
+  // Close expanded photo on Escape key
+  useEffect(() => {
+    if (!expandedPhoto) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpandedPhoto(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [expandedPhoto]);
+
   // Only 5 images in total, distributed as described
   return (
     <main className="pt-1 items-baseline justify-between bg-white">
@@ -20,7 +32,7 @@ export default function Home() {
             </div>
             <div className="text-left font-normal text-gray-700 mt-3">
               <div className="font-bold text-blue-900 mb-1">
-                Beautifully historic flat in downtown
+                Beautifully historic apartment in downtown
               </div>
               <div>
                 Samuel von Brukenthal, No. 1, Ap 6, Sibiu Old Town, Sibiu,
@@ -39,7 +51,10 @@ export default function Home() {
           </div>
           {/* First column: one large image */}
           <div className="col-span-1 flex flex-col gap-4">
-            <div className="w-full h-[36rem] rounded-xl overflow-hidden shadow-2xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+            <div
+              className="w-full h-[36rem] rounded-xl overflow-hidden shadow-2xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
+              onClick={() => setExpandedPhoto("/163426986.jpg")}
+            >
               <Image
                 src="/163426986.jpg"
                 alt="Apartment highlight 1"
@@ -52,7 +67,10 @@ export default function Home() {
           </div>
           {/* Second column: two stacked images */}
           <div className="col-span-1 flex flex-col gap-4">
-            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+            <div
+              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
+              onClick={() => setExpandedPhoto("/163308132.jpg")}
+            >
               <Image
                 src="/163308132.jpg"
                 alt="Apartment highlight 2"
@@ -62,7 +80,10 @@ export default function Home() {
                 priority={false}
               />
             </div>
-            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+            <div
+              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
+              onClick={() => setExpandedPhoto("/175330372.jpg")}
+            >
               <Image
                 src="/175330372.jpg"
                 alt="Apartment highlight 3"
@@ -75,7 +96,10 @@ export default function Home() {
           </div>
           {/* Third column: two stacked images */}
           <div className="col-span-1 flex flex-col gap-4">
-            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+            <div
+              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
+              onClick={() => setExpandedPhoto("/175330474.jpg")}
+            >
               <Image
                 src="/175330474.jpg"
                 alt="Apartment highlight 4"
@@ -85,7 +109,10 @@ export default function Home() {
                 priority={false}
               />
             </div>
-            <div className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl">
+            <div
+              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
+              onClick={() => setExpandedPhoto("/175330495.jpg")}
+            >
               <Image
                 src="/175330495.jpg"
                 alt="Apartment highlight 5"
@@ -97,6 +124,47 @@ export default function Home() {
             </div>
           </div>
         </div>
+        {/* Expanded photo modal */}
+        {expandedPhoto && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+            onClick={() => setExpandedPhoto(null)}
+          >
+            <div
+              className="relative max-w-3xl w-full flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-200 transition"
+                onClick={() => setExpandedPhoto(null)}
+                aria-label="Close expanded photo"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-6 h-6 text-gray-700"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <Image
+                src={expandedPhoto}
+                alt="Expanded apartment photo"
+                width={900}
+                height={700}
+                className="rounded-xl shadow-2xl object-contain max-h-[80vh] w-auto h-auto"
+                priority
+              />
+            </div>
+          </div>
+        )}
       </section>
       {/* Description at the bottom as before */}
       <section className="flex justify-center w-full">

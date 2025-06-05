@@ -19,6 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function BookYourStay() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
 
   const handleBook = () => {
     if (Array.isArray(date) && date.length === 2) {
@@ -52,7 +53,6 @@ export default function BookYourStay() {
 
   // Sample photos for the apartment
   const photos = [
-    "/Digital-Gallery-Award-TRA-2025.png",
     "/163308118.jpg",
     "/163308121.jpg",
     "/163308125.jpg",
@@ -86,7 +86,10 @@ export default function BookYourStay() {
         <CarouselContent>
           {photos.map((src, index) => (
             <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-              <div className="p-1 shadow-md rounded-lg">
+              <div
+                className="p-1 shadow-md rounded-lg cursor-pointer"
+                onClick={() => setExpandedPhoto(src)}
+              >
                 <Card>
                   <CardContent className="flex aspect-square place-items-center justify-center p-1">
                     <Image
@@ -105,6 +108,47 @@ export default function BookYourStay() {
         <CarouselPrevious />
         <CarouselNext />
       </Carousel>
+      {/* Expanded photo modal */}
+      {expandedPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setExpandedPhoto(null)}
+        >
+          <div
+            className="relative max-w-3xl w-full flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-200 transition"
+              onClick={() => setExpandedPhoto(null)}
+              aria-label="Close expanded photo"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-6 h-6 text-gray-700"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <Image
+              src={expandedPhoto}
+              alt="Expanded apartment photo"
+              width={900}
+              height={700}
+              className="rounded-xl shadow-2xl object-contain max-h-[80vh] w-auto h-auto"
+              priority
+            />
+          </div>
+        </div>
+      )}
       {/* Calendar and Booked Dates side by side in the middle */}
       <div className="w-full flex flex-col md:flex-row gap-8 items-stretch justify-center mt-8 max-w-6xl">
         <div className="md:w-1/2 w-full flex flex-col gap-6 items-center justify-center">
