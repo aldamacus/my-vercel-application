@@ -288,7 +288,7 @@ export default function BookYourStay() {
               }}
               modifiersClassNames={{
                 booked:
-                  "bg-gray-300   text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700",
+                  "bg-gray-300   text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700 line-through",
                 selected: "bg-green-200 text-green-900 font-bold",
                 today:
                   "bg-blue-200 text-blue-900 border-blue-700 border-2 font-bold",
