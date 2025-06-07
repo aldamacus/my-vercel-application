@@ -1,20 +1,21 @@
 "use client"; // This directive is important to make this a Client Component (can use browser APIs)
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 
 // Initialize EmailJS with your Public Key
 emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY);
 
-export default function ContactForm() {
+export default function ContactForm({ onSuccess }) {
   // useRef to access the form DOM node
   const formRef = useRef();
+  const [sending, setSending] = useState(false);
 
   const sendEmail = (e) => {
     e.preventDefault(); // prevent default form submission behavior
     if (!formRef.current) return;
     const form = formRef.current;
-
+    setSending(true);
     // Use EmailJS to send form data
     emailjs
       .sendForm(
@@ -23,20 +24,26 @@ export default function ContactForm() {
         form
       )
       .then((response) => {
-        console.log("SUCCESS!", response.status, response.text);
-        // You could show a success message to the user here
+        setSending(false);
+        if (onSuccess && typeof onSuccess === "function") {
+          onSuccess();
+        }
       })
       .catch((error) => {
-        console.error("FAILED...", error);
+        setSending(false);
         // Show an error message to the user if needed
+        alert("Failed to send message. Please try again later.");
       });
-
     // Optionally, reset the form or handle UI state after sending
     form.reset();
   };
 
   return (
-    <form ref={formRef} onSubmit={sendEmail} className="space-y-4">
+    <form
+      ref={formRef}
+      onSubmit={sendEmail}
+      className="space-y-4 w-full max-w-md mx-auto p-2 sm:p-4"
+    >
       <label className="block text-sm font-medium text-blue-900 mb-1">
         Name:
         <input
@@ -72,9 +79,10 @@ export default function ContactForm() {
       </label>
       <button
         type="submit"
-        className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors duration-200 text-base mt-2"
+        className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors duration-200 text-base mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+        disabled={sending}
       >
-        Send Message
+        {sending ? "Sending..." : "Send Message"}
       </button>
     </form>
   );
