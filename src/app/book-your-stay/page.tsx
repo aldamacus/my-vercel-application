@@ -152,14 +152,17 @@ export default function BookYourStay() {
   }, []);
 
   return (
-    <div className="py-12 flex flex-col items-center justify-center min-h-screen px-100">
-      <h1 className="text-3xl font-bold mb-4 items-start">
+    <div className="py-8 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 md:px-10 bg-gradient-to-b from-white via-blue-50 to-blue-100 w-full max-w-7xl mx-auto">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 w-full text-center text-blue-900 drop-shadow-sm">
         Central Am Brukenthal
       </h1>
       <Carousel>
         <CarouselContent>
           {photos.map((src, index) => (
-            <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+            <CarouselItem
+              key={index}
+              className="sm:basis-2/3 md:basis-1/2 lg:basis-1/3"
+            >
               <div
                 className="p-1 shadow-md rounded-lg cursor-pointer"
                 onClick={() => setExpandedPhoto(src)}
@@ -232,7 +235,7 @@ export default function BookYourStay() {
       {/* Calendar and Booked Dates side by side in the middle */}
       <div className="w-full flex flex-col md:flex-row gap-8 items-stretch justify-center mt-8 max-w-6xl">
         <div className="md:w-1/2 w-full flex flex-col gap-6 items-center justify-center">
-          <div className="w-full max-w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-6 border-2 border-blue-200">
+          <div className="w-full max-w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-blue-200">
             <Calendar
               mode="single"
               selected={date}
@@ -240,7 +243,7 @@ export default function BookYourStay() {
               disabled={disabled}
               showOutsideDays
               numberOfMonths={1}
-              className="rounded-lg border-2 border-blue-400 shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-blue-400 text-gray-900 w-full max-w-xl p-4"
+              className="rounded-lg border-2 border-blue-400 shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-blue-400 text-gray-900 w-full max-w-xl p-2 sm:p-4"
               modifiers={{
                 booked: bookedDates,
                 selected: userSelectedDates,
@@ -248,7 +251,7 @@ export default function BookYourStay() {
               }}
               modifiersClassNames={{
                 booked:
-                  "bg-gray-300   text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700 line-through",
+                  "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700 line-through",
                 selected: "bg-green-200 text-green-900 font-bold",
                 today:
                   "bg-blue-200 text-blue-900 border-blue-700 border-2 font-bold",
@@ -279,7 +282,7 @@ export default function BookYourStay() {
             />
 
             <button
-              className="mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg on hover:shadow-2xl transition-all text-lg tracking-wide"
+              className="mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:shadow-2xl transition-all text-lg tracking-wide"
               onClick={() => setUserSelectedDates([])}
               disabled={userSelectedDates.length === 0}
             >
@@ -289,8 +292,8 @@ export default function BookYourStay() {
             </button>
           </div>
         </div>
-        <div className="md:w-1/2 w-full flex flex-col items-start bg-white/90 rounded-2xl shadow-lg p-6 border border-gray-200 min-h-[320px] mt-6 md:mt-0">
-          <h2 className="font-semibold text-lg mb-2 text-blue-800">
+        <div className="md:w-1/2 w-full flex flex-col items-start bg-white/90 rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200 min-h-[320px] mt-6 md:mt-0">
+          <h2 className="font-semibold text-lg sm:text-xl mb-2 text-blue-800">
             Your Trip
           </h2>
           <div className="mb-2 text-red-600 font-semibold text-sm">
