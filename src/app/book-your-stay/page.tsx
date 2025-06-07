@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import ContactForm from "@/components/ui/ContactForm";
+
 //import { DayPicker } from "react-day-picker";
 //import "react-day-picker/style.css";
 import {
@@ -23,6 +25,7 @@ export default function BookYourStay() {
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Array for user-selected dates (not Airbnb booked dates)
@@ -343,13 +346,44 @@ export default function BookYourStay() {
           )}
           <div className="mt-4 text-xs text-gray-500">
             Booked dates are blocked for new reservations. For special requests,
-            <a
-              href="mailto:central.brukenthal@gmail.com"
-              className="text-blue-700 underline hover:text-blue-900 ml-1"
+            <button
+              type="button"
+              className="text-blue-700 underline hover:text-blue-900 ml-1 font-semibold focus:outline-none cursor-pointer"
+              onClick={() => setShowContactForm(true)}
             >
               contact us directly
-            </a>
+            </button>
             !
+            {showContactForm && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative animate-fade-in">
+                  <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 bg-gray-100 rounded-full p-2 focus:outline-none"
+                    onClick={() => setShowContactForm(false)}
+                    aria-label="Close contact form"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  <h3 className="text-lg font-bold text-blue-900 mb-4 text-center">
+                    Contact Us
+                  </h3>
+                  <ContactForm />
+                </div>
+              </div>
+            )}
           </div>
           <button
             className={`mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-lg tracking-wide ${
