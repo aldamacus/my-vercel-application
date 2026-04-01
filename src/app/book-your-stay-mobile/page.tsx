@@ -102,14 +102,16 @@ export default function BookYourStayMobile() {
       {/* Grid of images */}
       <div className="grid grid-cols-3 gap-2 w-full mb-4">
         {photos.slice(0, 9).map((src, idx) => (
-          <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-blue-100 shadow-sm">
+          <div
+            key={idx}
+            className="relative aspect-square w-full overflow-hidden rounded-lg border border-blue-100 shadow-sm"
+          >
             <Image
               src={src}
               alt={`Apartment photo ${idx + 1}`}
-              width={120}
-              height={120}
-              className="object-cover w-full h-full"
-              style={{ aspectRatio: "1/1" }}
+              fill
+              sizes="(max-width: 448px) 34vw, 120px"
+              className="object-cover"
               priority={idx < 3}
             />
           </div>

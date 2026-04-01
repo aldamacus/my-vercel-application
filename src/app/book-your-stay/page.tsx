@@ -14,7 +14,6 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
 import PaymentModal from "@/components/PaymentModal";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -126,41 +125,38 @@ export default function BookYourStay() {
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 w-full text-center text-blue-900 drop-shadow-sm">
         Central Am Brukenthal
       </h1>
-      <Carousel>
-        <CarouselContent>
-          {photos.map((src, index) => (
-            <CarouselItem
-              key={index}
-              className="sm:basis-2/3 md:basis-1/2 lg:basis-1/3"
-            >
-              <div
-                className="p-1 shadow-md rounded-lg cursor-pointer"
-                onClick={() => setExpandedPhoto(src)}
+      <div className="w-full max-w-6xl mx-auto px-10 sm:px-12 md:px-14">
+        <Carousel className="w-full">
+          <CarouselContent>
+            {photos.map((src, index) => (
+              <CarouselItem
+                key={index}
+                className="sm:basis-2/3 md:basis-1/2 lg:basis-1/3"
               >
-                <Card>
-                  <CardContent className="flex aspect-square place-items-center justify-center p-1">
+                <button
+                  type="button"
+                  className="w-full p-1 text-left cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  onClick={() => setExpandedPhoto(src)}
+                  aria-label={`View apartment photo ${index + 1} larger`}
+                >
+                  <div className="relative w-full aspect-[4/3] max-h-[min(42vw,22rem)] overflow-hidden rounded-lg shadow-md">
                     <Image
                       src={src}
                       alt={`Apartment photo ${index + 1}`}
-                      width={250}
-                      height={180}
-                      className="rounded shadow-md object-cover hover:scale-105 transition-transform duration-200"
-                      style={{
-                        width: "100%",
-                        height: "auto",
-                        aspectRatio: "4/3",
-                        objectFit: "cover",
-                      }}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-200 hover:scale-105"
+                      priority={index < 3}
                     />
-                  </CardContent>
-                </Card>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+                  </div>
+                </button>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
+      </div>
       {/* Expanded photo modal */}
       {expandedPhoto && (
         <div
@@ -168,11 +164,11 @@ export default function BookYourStay() {
           onClick={() => setExpandedPhoto(null)}
         >
           <div
-            className="relative max-w-3xl w-full flex flex-col items-center"
+            className="relative w-full max-w-[min(100vw-2rem,56rem)] flex flex-col items-center justify-center px-4"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-200 transition"
+              className="absolute top-2 right-2 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-200 transition"
               onClick={() => setExpandedPhoto(null)}
               aria-label="Close expanded photo"
             >
@@ -191,14 +187,17 @@ export default function BookYourStay() {
                 />
               </svg>
             </button>
-            <Image
-              src={expandedPhoto}
-              alt="Expanded apartment photo"
-              width={900}
-              height={700}
-              className="rounded-xl shadow-2xl object-contain max-h-[80vh] w-auto h-auto"
-              priority
-            />
+            <div className="relative w-full max-h-[80vh] min-h-[12rem]">
+              <Image
+                src={expandedPhoto}
+                alt="Expanded apartment photo"
+                width={1200}
+                height={900}
+                sizes="(max-width: 768px) 100vw, 56rem"
+                className="rounded-xl shadow-2xl object-contain max-h-[80vh] w-full h-auto"
+                priority
+              />
+            </div>
           </div>
         </div>
       )}
