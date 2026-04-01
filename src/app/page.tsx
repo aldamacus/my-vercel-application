@@ -221,40 +221,54 @@ export default function Home() {
           <h3 className="text-2xl font-semibold mb-4 text-blue-700">
             About this property
           </h3>
-          <p className="text-lg text-gray-700">
-            About this property Reliable info: Guests say the description and
-            photos for this property are very accurate.
-            <strong className="block mt-2 mb-1">
-              Comfortable Living Space:
-            </strong>
-            <ul className="list-disc pl-8 mb-2">
-              <li>
-                Central am Brukenthal in Sibiu offers a one-bedroom apartment
-                with a terrace and free WiFi. The ground-floor unit features a
-                kitchenette, dining area, and a sofa bed.
-              </li>
-            </ul>
-            <strong className="block mt-2 mb-1">Modern Amenities:</strong>
-            <ul className="list-disc pl-8 mb-2">
-              <li>
-                Guests enjoy a fully equipped kitchen with a refrigerator,
-                stovetop, microwave, and coffee machine. Additional amenities
-                include a terrace, patio, outdoor furniture, and a dining table.
-              </li>
-            </ul>
-            <strong className="block mt-2 mb-1">Convenient Location:</strong>
-            <ul className="list-disc pl-8 mb-2">
-              <li>
-                Located in the heart of Sibiu&apos;s Old Town, the apartment is
-                within walking distance of major attractions like Piata Mare and
-                the Brukenthal Palace.
-              </li>
-              Located 2.5 mi from Sibiu International Airport, the apartment is
-              near attractions such as The Stairs Passage (a few steps), The
-              Council Tower of Sibiu (3-minute walk), and Piata Mare Sibiu (656
-              feet). Highly rated for its central location and room cleanliness.
-            </ul>
-          </p>
+          <div className="text-lg text-gray-700 space-y-3">
+            <p>
+              About this property Reliable info: Guests say the description and
+              photos for this property are very accurate.
+            </p>
+            <div>
+              <h4 className="text-base font-semibold text-gray-900 mt-2 mb-1">
+                Comfortable Living Space
+              </h4>
+              <ul className="list-disc pl-8 space-y-1">
+                <li>
+                  Central am Brukenthal in Sibiu offers a one-bedroom apartment
+                  with a terrace and free WiFi. The ground-floor unit features a
+                  kitchenette, dining area, and a sofa bed.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-base font-semibold text-gray-900 mt-2 mb-1">
+                Modern Amenities
+              </h4>
+              <ul className="list-disc pl-8 space-y-1">
+                <li>
+                  Guests enjoy a fully equipped kitchen with a refrigerator,
+                  stovetop, microwave, and coffee machine. Additional amenities
+                  include a terrace, patio, outdoor furniture, and a dining table.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-base font-semibold text-gray-900 mt-2 mb-1">
+                Convenient Location
+              </h4>
+              <ul className="list-disc pl-8 space-y-1">
+                <li>
+                  Located in the heart of Sibiu&apos;s Old Town, the apartment is
+                  within walking distance of major attractions like Piata Mare and
+                  the Brukenthal Palace.
+                </li>
+                <li>
+                  Located 2.5 mi from Sibiu International Airport, the apartment is
+                  near attractions such as The Stairs Passage (a few steps), The
+                  Council Tower of Sibiu (3-minute walk), and Piata Mare Sibiu (656
+                  feet). Highly rated for its central location and room cleanliness.
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
     </main>
