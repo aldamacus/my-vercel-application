@@ -5,7 +5,7 @@ export default function PayPalCheckout() {
   return (
     <PayPalScriptProvider options={{ clientId: "test" }}>
       <div className="flex flex-col items-center py-8">
-        <h2 className="text-2xl font-semibold mb-4 text-blue-700">
+        <h2 className="mb-4 text-2xl font-semibold text-neutral-900">
           Pay with PayPal
         </h2>
         <PayPalButtons

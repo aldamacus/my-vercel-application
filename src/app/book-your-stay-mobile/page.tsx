@@ -95,16 +95,16 @@ export default function BookYourStayMobile() {
   };
 
   return (
-    <div className="py-4 flex flex-col items-center min-h-screen px-2 bg-gradient-to-b from-white via-blue-50 to-blue-100 w-full max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-2 w-full text-center text-blue-900 drop-shadow-sm">
-        Central Am Brukenthal
+    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center bg-gradient-to-b from-white via-neutral-50 to-neutral-100 px-2 py-4">
+      <h1 className="mb-2 w-full text-center text-xl font-semibold tracking-tight text-neutral-900">
+        Central am Brukenthal
       </h1>
       {/* Grid of images */}
       <div className="grid grid-cols-3 gap-2 w-full mb-4">
         {photos.slice(0, 9).map((src, idx) => (
           <div
             key={idx}
-            className="relative aspect-square w-full overflow-hidden rounded-lg border border-blue-100 shadow-sm"
+            className="relative aspect-square w-full overflow-hidden rounded-xl border border-neutral-200 shadow-sm"
           >
             <Image
               src={src}
@@ -118,9 +118,9 @@ export default function BookYourStayMobile() {
         ))}
       </div>
       {/* Calendar */}
-      <div className="w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-2 border-2 border-blue-200 mb-4">
+      <div className="mb-4 flex w-full flex-col items-center rounded-2xl border border-neutral-200 bg-white p-2 shadow-sm">
         {calendarLoading && (
-          <p className="text-xs text-blue-700 mb-2 self-start px-1">
+          <p className="mb-2 self-start px-1 text-xs text-neutral-600">
             Loading availability…
           </p>
         )}
@@ -143,7 +143,7 @@ export default function BookYourStayMobile() {
           disabled={disabled}
           showOutsideDays
           numberOfMonths={1}
-          className="rounded-lg border-2 border-blue-400 shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-blue-400 text-gray-900 w-full max-w-xs p-1"
+          className="w-full max-w-xs rounded-xl border border-neutral-200 p-1 text-neutral-900 shadow-sm focus:border-neutral-400 focus:ring-2 focus:ring-primary/30"
           modifiers={{
             booked: bookedDates,
             selected: userSelectedDates,
@@ -154,7 +154,7 @@ export default function BookYourStayMobile() {
               "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700 line-through",
             selected: "bg-green-200 text-green-900 font-bold",
             today:
-              "bg-blue-200 text-blue-900 border-blue-700 border-2 font-bold",
+              "bg-neutral-100 text-neutral-900 border-neutral-400 border-2 font-bold",
           }}
           modifiersStyles={{
             booked: {
@@ -168,9 +168,9 @@ export default function BookYourStayMobile() {
               fontWeight: "bold",
             },
             today: {
-              backgroundColor: "#bfdbfe",
-              color: "#1e40af",
-              border: "2px solid #1d4ed8",
+              backgroundColor: "#f5f5f5",
+              color: "#171717",
+              border: "2px solid #a3a3a3",
               fontWeight: "bold",
             },
           }}
@@ -181,16 +181,17 @@ export default function BookYourStayMobile() {
           }}
         />
         <button
-          className="mt-4 w-full px-4 py-2 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:shadow-2xl transition-all text-base tracking-wide"
+          type="button"
+          className="mt-4 w-full rounded-lg border border-neutral-900 bg-white px-4 py-2 text-base font-semibold text-neutral-900 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
           onClick={() => setUserSelectedDates([])}
           disabled={userSelectedDates.length === 0}
         >
-          Clear Selected Dates
+          Clear selected dates
         </button>
       </div>
       {/* Booking summary */}
-      <div className="w-full flex flex-col items-start bg-white/90 rounded-2xl shadow-lg p-3 border border-gray-200 min-h-[180px] mb-4">
-        <h2 className="font-semibold text-base mb-1 text-blue-800">Your Trip</h2>
+      <div className="mb-4 flex min-h-[180px] w-full flex-col items-start rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
+        <h2 className="mb-1 text-base font-semibold text-neutral-900">Your trip</h2>
         <div className="mb-1 text-red-600 font-semibold text-xs">
           A minimum stay of 2 nights is required.
         </div>
@@ -224,7 +225,7 @@ export default function BookYourStayMobile() {
           Booked dates are blocked. For special requests,
           <button
             type="button"
-            className="text-blue-700 underline hover:text-blue-900 ml-1 font-semibold focus:outline-none cursor-pointer"
+            className="ml-1 cursor-pointer font-semibold text-neutral-900 underline underline-offset-2 hover:text-primary focus:outline-none"
             onClick={() => setShowContactForm(true)}
           >
             contact us directly
@@ -232,7 +233,7 @@ export default function BookYourStayMobile() {
           !
           {showContactForm && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-              <div className="bg-white rounded-xl shadow-2xl p-4 w-full max-w-xs relative animate-fade-in">
+              <div className="relative w-full max-w-xs animate-fade-in rounded-2xl border border-neutral-200 bg-white p-4 shadow-xl">
                 <button
                   className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 bg-gray-100 rounded-full p-2 focus:outline-none"
                   onClick={() => setShowContactForm(false)}
@@ -242,7 +243,7 @@ export default function BookYourStayMobile() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-                <h3 className="text-base font-bold text-blue-900 mb-2 text-center">Contact Us</h3>
+                <h3 className="mb-2 text-center text-base font-semibold text-neutral-900">Contact us</h3>
                 <ContactForm onSuccess={() => { setShowContactForm(false); setShowSuccess(true); }} />
               </div>
             </div>
@@ -269,7 +270,7 @@ export default function BookYourStayMobile() {
           )}
         </div>
         <button
-          className={`mt-4 w-full px-4 py-2 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-base tracking-wide ${userSelectedDates.length < 2 ? "opacity-50 cursor-not-allowed" : ""}`}
+          className={`mt-4 w-full rounded-lg bg-primary px-4 py-2 text-base font-semibold text-primary-foreground shadow-md transition hover:opacity-95 ${userSelectedDates.length < 2 ? "cursor-not-allowed opacity-50" : ""}`}
           onClick={() => userSelectedDates.length >= 2 && setShowPayment(true)}
           disabled={userSelectedDates.length < 2}
         >
@@ -282,8 +283,8 @@ export default function BookYourStayMobile() {
         amount={userSelectedDates.length * 30 || 0}
       />
       {/* Details */}
-      <div className="w-full bg-white/80 rounded-xl shadow-lg p-3 mb-4">
-        <ul className="list-disc pl-4 text-gray-700 text-xs space-y-1">
+      <div className="mb-4 w-full rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
+        <ul className="list-disc space-y-1 pl-4 text-xs text-neutral-600">
           <li>Spacious living room with lots of natural light</li>
           <li>Fully equipped modern kitchen</li>
           <li>Comfortable queen-size bed and cozy linens</li>

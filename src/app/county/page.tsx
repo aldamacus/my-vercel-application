@@ -48,49 +48,49 @@ const areas = [
 export default function County() {
   return (
     <div className="w-full max-w-4xl mx-auto py-10 px-4">
-      <p className="text-lg mb-4">
+      <p className="mb-4 text-lg text-neutral-600">
         Explore the beautiful landscapes, rich history, and vibrant culture of
         Sibiu County.
       </p>
-      <p className="text-lg mb-4">
+      <p className="mb-4 text-lg text-neutral-600">
         From the stunning Carpathian Mountains to the charming medieval towns,
         Sibiu County offers a unique blend of natural beauty and cultural
         heritage.
       </p>
-      <p className="text-lg mb-4">
+      <p className="mb-4 text-lg text-neutral-600">
         Whether you&apos;re interested in hiking, exploring historical sites, or
         enjoying local cuisine, there&apos;s something for everyone in Sibiu
         County.
       </p>
 
-      <p className="text-lg mb-4">
-        <span className="font-semibold">Sibiu County</span> is known for its
+      <p className="mb-4 text-lg text-neutral-600">
+        <span className="font-semibold text-neutral-900">Sibiu County</span> is known for its
         picturesque villages, fortified churches, and vibrant cultural
         festivals. Don&apos;t miss the chance to experience the warmth and
         hospitality of the local communities.
       </p>
-      <p className="text-lg mb-4">
+      <p className="mb-4 text-lg text-neutral-600">
         Whether you&apos;re here for a short visit or planning a longer stay,
         Sibiu County promises an unforgettable experience filled with adventure
         and discovery.
       </p>
       <main className="w-full max-w-4xl mx-auto py-10 px-4">
-        <h1 className="text-3xl md:text-4xl font-bold text-blue-900 mb-6 text-center drop-shadow-sm">
-          Explore Villages & Areas Around Sibiu
+        <h1 className="mb-6 text-center text-3xl font-semibold tracking-tight text-neutral-900 md:text-4xl">
+          Explore villages & areas around Sibiu
         </h1>
-        <p className="mb-8 text-lg text-gray-700 text-center max-w-2xl mx-auto">
+        <p className="mx-auto mb-8 max-w-2xl text-center text-lg text-neutral-600">
           Discover the most beautiful villages and mountain resorts near Sibiu.
           Book your stay in the countryside and experience authentic
           Transylvanian hospitality!
         </p>
         <div className="grid gap-8 md:grid-cols-2">
           {/* Fantanele */}
-          <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-6 flex flex-col justify-between h-full">
+          <div className="flex h-full flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
             <div>
-              <h2 className="text-xl font-semibold text-blue-800 mb-2">
+              <h2 className="mb-2 text-xl font-semibold text-neutral-900">
                 Fântânele
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="mb-4 text-neutral-600">
                 A quiet village surrounded by rolling hills and forests, perfect
                 for a peaceful rural escape and hiking.
               </p>
@@ -99,18 +99,18 @@ export default function County() {
               href="https://www.booking.com/searchresults.en-gb.html?ss=Fantanele"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block mt-auto px-5 py-2 bg-blue-700 text-white font-bold rounded-lg shadow hover:bg-blue-800 transition-all text-base text-center"
+              className="mt-auto inline-block rounded-lg bg-primary px-5 py-2 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
             >
               Discover
             </Link>
           </div>
           {/* Cisnădie */}
-          <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-6 flex flex-col justify-between h-full">
+          <div className="flex h-full flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
             <div>
-              <h2 className="text-xl font-semibold text-blue-800 mb-2">
+              <h2 className="mb-2 text-xl font-semibold text-neutral-900">
                 Cisnădie
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="mb-4 text-neutral-600">
                 A small town with a beautiful fortified church, colorful houses,
                 and a relaxed atmosphere just south of Sibiu.
               </p>
@@ -119,7 +119,7 @@ export default function County() {
               href="https://www.booking.com/searchresults.en-gb.html?ss=Cisnadie%2C+Sibiu+County%2C+Romania&src_elem=sb&src=index&dest_id=-1156247&dest_type=city&place_id=city%2F-1156247"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block mt-auto px-5 py-2 bg-blue-700 text-white font-bold rounded-lg shadow hover:bg-blue-800 transition-all text-base text-center"
+              className="mt-auto inline-block rounded-lg bg-primary px-5 py-2 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
             >
               Discover
             </Link>
@@ -128,31 +128,31 @@ export default function County() {
           {areas.map((area) => (
             <div
               key={area.name}
-              className="bg-white rounded-xl shadow-lg border border-blue-100 p-6 flex flex-col justify-between h-full"
+              className="flex h-full flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
             >
               <div>
-                <h2 className="text-xl font-semibold text-blue-800 mb-2">
+                <h2 className="mb-2 text-xl font-semibold text-neutral-900">
                   {area.name}
                 </h2>
-                <p className="text-gray-700 mb-4">{area.description}</p>
+                <p className="mb-4 text-neutral-600">{area.description}</p>
               </div>
               <Link
                 href={area.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-auto px-5 py-2 bg-blue-700 text-white font-bold rounded-lg shadow hover:bg-blue-800 transition-all text-base text-center"
+                className="mt-auto inline-block rounded-lg bg-primary px-5 py-2 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
               >
                 Discover
               </Link>
             </div>
           ))}
           {/* Balea */}
-          <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-6 flex flex-col justify-between h-full">
+          <div className="flex h-full flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
             <div>
-              <h2 className="text-xl font-semibold text-blue-800 mb-2">
+              <h2 className="mb-2 text-xl font-semibold text-neutral-900">
                 Bâlea Lac & Transfăgărășan
               </h2>
-              <p className="text-gray-700 mb-4">
+              <p className="mb-4 text-neutral-600">
                 Experience the breathtaking Bâlea Lake, nestled high in the
                 Făgăraș Mountains and accessible via the famous Transfăgărășan
                 road—one of the most spectacular alpine drives in the world.
@@ -163,13 +163,13 @@ export default function County() {
               href="https://www.booking.com/searchresults.en-gb.html?ss=Balea+Lac"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block mt-auto px-5 py-2 bg-blue-700 text-white font-bold rounded-lg shadow hover:bg-blue-800 transition-all text-base text-center"
+              className="mt-auto inline-block rounded-lg bg-primary px-5 py-2 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
             >
               Discover
             </Link>
           </div>
         </div>
-        <p className="mt-10 text-xs text-gray-500 text-center">
+        <p className="mt-10 text-center text-xs text-neutral-500">
           Affiliate links: Booking.com &copy; {new Date().getFullYear()}
         </p>
       </main>

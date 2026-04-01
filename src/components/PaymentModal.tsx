@@ -13,7 +13,7 @@ export default function PaymentModal({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full relative">
+      <div className="relative w-full max-w-md rounded-2xl border border-neutral-200 bg-white p-8 shadow-xl">
         <button
           className="absolute top-2 right-2 bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition"
           onClick={onClose}
@@ -34,10 +34,10 @@ export default function PaymentModal({
             />
           </svg>
         </button>
-        <h2 className="text-2xl font-semibold mb-4 text-blue-700 text-center">
-          Secure PayPal Payment
+        <h2 className="mb-4 text-center text-2xl font-semibold text-neutral-900">
+          Secure PayPal payment
         </h2>
-        <div className="mb-4 text-center text-gray-700">
+        <div className="mb-4 text-center text-neutral-600">
           Please complete your booking by paying{" "}
           <span className="font-bold">€{amount}</span> securely via PayPal.
         </div>

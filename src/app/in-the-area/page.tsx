@@ -103,12 +103,12 @@ const areaData = [
 
 export default function InTheArea() {
   return (
-    <div className="min-h-screen py-12 px-4 md:px-16 bg-gradient-to-br from-[#f8fafc] to-[#e0e7ef] flex flex-col items-center">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
+    <div className="flex min-h-screen flex-col items-center bg-neutral-50 px-4 py-12 md:px-16">
+      <div className="grid w-full max-w-7xl grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {areaData.map((item, i) => (
           <div
             key={i}
-            className="bg-white rounded-2xl shadow-xl flex flex-col items-center p-4 transition-transform hover:scale-105 group"
+            className="group flex flex-col items-center rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-transform hover:scale-[1.02]"
           >
             <a
               href={item.map}
@@ -121,13 +121,13 @@ export default function InTheArea() {
                 alt={item.title}
                 width={340}
                 height={220}
-                className="rounded-xl object-cover w-full h-48 mb-3 shadow-md hover:opacity-80 transition-opacity"
+                className="mb-3 h-48 w-full rounded-xl object-cover shadow-sm transition-opacity hover:opacity-90"
               />
             </a>
-            <div className="text-xl font-semibold text-[#1e293b] mb-2 text-center">
+            <div className="mb-2 text-center text-xl font-semibold text-neutral-900">
               {item.title}
             </div>
-            <div className="bg-[#f1f5f9] rounded-lg p-4 text-gray-700 text-base text-center shadow-inner opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-96 group-hover:py-4 transition-all duration-500 overflow-hidden">
+            <div className="max-h-0 overflow-hidden rounded-xl bg-neutral-100 p-0 text-center text-base text-neutral-600 opacity-0 shadow-inner transition-all duration-500 group-hover:max-h-96 group-hover:py-4 group-hover:opacity-100">
               {item.desc}
             </div>
           </div>

@@ -1,12 +1,20 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect } from "react";
+
+const GALLERY_MAIN = "/163426986.jpg";
+const GALLERY_TILES = [
+  "/163308132.jpg",
+  "/175330372.jpg",
+  "/175330474.jpg",
+  "/175330495.jpg",
+] as const;
 
 export default function Home() {
   const [expanded, setExpanded] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
 
-  // Close expanded photo on Escape key
   useEffect(() => {
     if (!expandedPhoto) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -16,126 +24,255 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [expandedPhoto]);
 
-  // Only 5 images in total, distributed as described
   return (
-    <main className="pt-1 items-baseline justify-between bg-white">
-      {/* ...gallery section... */}
-      <section className="flex justify-center w-full">
-        <div
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 py-16 w-full max-w-6xl"
-          style={{ maxWidth: "65vw" }}
-        >
-          {/* Info block above the first column */}
-          <div className="md:col-span-3 flex columns-2 justify-center w-full flex-col items-baseline pt-10 pb-5 mb-8">
-            <div className="text-left text-4xl font-semibold text-blue-800">
-              Central am Brukenthal
-            </div>
-            <div className="text-left font-normal text-gray-700 mt-3">
-              <div className="font-bold text-blue-900 mb-1">
-                Beautifully historic apartment in downtown
-              </div>
-              <div>
-                Samuel von Brukenthal, No. 1, Ap 6, Sibiu Old Town, Sibiu,
-                Romania
-                <br />
-                <a
-                  href="https://maps.app.goo.gl/n9sN3Bf35QJsCd2Y9"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-700 underline hover:text-blue-900 font-semibold"
-                >
-                  Excellent location – show map
-                </a>
-              </div>
-            </div>
-          </div>
-          {/* First column: one large image */}
-          <div className="col-span-1 flex flex-col gap-4">
-            <div
-              className="w-full h-[36rem] rounded-xl overflow-hidden shadow-2xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
-              onClick={() => setExpandedPhoto("/163426986.jpg")}
+    <main className="bg-white pb-16 pt-2">
+      <section className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
+        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-200 shadow-sm ring-1 ring-black/5">
+          <div className="flex flex-col gap-1 md:h-[min(52vh,28rem)] md:flex-row md:gap-1 lg:h-[min(56vh,30rem)]">
+            <button
+              type="button"
+              className="group relative aspect-[4/3] w-full min-h-[200px] overflow-hidden bg-neutral-100 md:aspect-auto md:min-h-0 md:flex-[1.15] md:min-w-0"
+              onClick={() => setExpandedPhoto(GALLERY_MAIN)}
+              aria-label="Open main listing photo larger"
             >
               <Image
-                src="/163426986.jpg"
-                alt="Apartment highlight 1"
-                width={800}
-                height={1200}
-                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                src={GALLERY_MAIN}
+                alt="Central am Brukenthal — main view"
+                fill
+                className="object-cover transition duration-300 group-hover:brightness-[0.97]"
+                sizes="(max-width: 768px) 100vw, 58vw"
                 priority
               />
-            </div>
-          </div>
-          {/* Second column: two stacked images */}
-          <div className="col-span-1 flex flex-col gap-4">
-            <div
-              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
-              onClick={() => setExpandedPhoto("/163308132.jpg")}
-            >
-              <Image
-                src="/163308132.jpg"
-                alt="Apartment highlight 2"
-                width={600}
-                height={400}
-                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
-                priority={false}
-              />
-            </div>
-            <div
-              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
-              onClick={() => setExpandedPhoto("/175330372.jpg")}
-            >
-              <Image
-                src="/175330372.jpg"
-                alt="Apartment highlight 3"
-                width={600}
-                height={400}
-                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
-                priority={false}
-              />
-            </div>
-          </div>
-          {/* Third column: two stacked images */}
-          <div className="col-span-1 flex flex-col gap-4">
-            <div
-              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
-              onClick={() => setExpandedPhoto("/175330474.jpg")}
-            >
-              <Image
-                src="/175330474.jpg"
-                alt="Apartment highlight 4"
-                width={600}
-                height={400}
-                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
-                priority={false}
-              />
-            </div>
-            <div
-              className="w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white flex items-center justify-center group transition-transform duration-300 hover:scale-105 hover:z-10 hover:shadow-2xl cursor-pointer"
-              onClick={() => setExpandedPhoto("/175330495.jpg")}
-            >
-              <Image
-                src="/175330495.jpg"
-                alt="Apartment highlight 5"
-                width={600}
-                height={400}
-                className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
-                priority={false}
-              />
+            </button>
+            <div className="grid min-h-[200px] flex-1 grid-cols-2 grid-rows-2 gap-1 md:min-h-0 md:min-w-0">
+              {GALLERY_TILES.map((src, index) => {
+                const isLast = index === GALLERY_TILES.length - 1;
+                if (isLast) {
+                  return (
+                    <Link
+                      key={src}
+                      href="/book-your-stay"
+                      className="group relative min-h-[100px] overflow-hidden bg-neutral-100 md:min-h-0"
+                      aria-label="View all apartment photos and book"
+                    >
+                      <Image
+                        src={src}
+                        alt=""
+                        fill
+                        className="object-cover transition duration-300 group-hover:brightness-90"
+                        sizes="(max-width: 768px) 50vw, 22vw"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/35 transition group-hover:bg-black/45">
+                        <span className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-neutral-900 shadow-sm md:text-sm">
+                          Show all photos
+                        </span>
+                      </span>
+                    </Link>
+                  );
+                }
+                return (
+                  <button
+                    key={src}
+                    type="button"
+                    className="group relative min-h-[100px] overflow-hidden bg-neutral-100 md:min-h-0"
+                    onClick={() => setExpandedPhoto(src)}
+                    aria-label={`Open photo ${index + 2} larger`}
+                  >
+                    <Image
+                      src={src}
+                      alt={`Apartment photo ${index + 2}`}
+                      fill
+                      className="object-cover transition duration-300 group-hover:brightness-[0.97]"
+                      sizes="(max-width: 768px) 50vw, 22vw"
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
-        {/* Expanded photo modal */}
+
+        <div className="mt-8 border-b border-neutral-200 pb-8">
+          <h1 className="text-[1.65rem] font-semibold leading-tight tracking-tight text-neutral-900 sm:text-3xl md:text-4xl">
+            Central am Brukenthal
+          </h1>
+          <p className="mt-2 text-lg text-neutral-600 md:text-xl">
+            Beautifully historic apartment in downtown Sibiu
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-600 md:text-base">
+            <span>Up to 4 guests</span>
+            <span className="text-neutral-300" aria-hidden>
+              ·
+            </span>
+            <span>1 bedroom</span>
+            <span className="text-neutral-300" aria-hidden>
+              ·
+            </span>
+            <span>2 beds</span>
+            <span className="text-neutral-300" aria-hidden>
+              ·
+            </span>
+            <span>1 bath</span>
+            <span className="text-neutral-300" aria-hidden>
+              ·
+            </span>
+            <span>Entire rental</span>
+          </div>
+          <p className="mt-3 max-w-2xl text-sm text-neutral-600 md:text-base">
+            Samuel von Brukenthal, No. 1, Ap 6, Sibiu Old Town, Sibiu, Romania
+          </p>
+          <a
+            href="https://maps.app.goo.gl/n9sN3Bf35QJsCd2Y9"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-sm font-semibold text-neutral-900 underline underline-offset-2 hover:text-brand"
+          >
+            Show on map
+          </a>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_min(360px,100%)] lg:gap-14">
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold text-neutral-900 md:text-2xl">
+              A home in the heart of the city
+            </h2>
+            <div className="relative mt-4">
+              <p
+                className={`text-base leading-relaxed text-neutral-600 transition-all duration-300 md:text-lg ${
+                  expanded ? "" : "max-h-[10rem] overflow-hidden"
+                }`}
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: expanded ? undefined : 6,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                Welcome to Central am Brukenthal, your cozy haven set in the
+                enchanting heart of Sibiu&apos;s Old Town. Here, you&apos;ll find
+                an inviting atmosphere that feels just like home. As the summer
+                heat envelops the city, our apartment remains a refreshing
+                retreat, maintaining a perfect temperature that ensures a
+                comfortable night&apos;s sleep, even on the warmest of evenings.
+                <br />
+                <br />
+                Imagine unwinding on your private terrace, sipping a cool drink
+                while soaking in the lively ambiance of the bustling streets
+                below. With fast and free WiFi, you can easily share your
+                delightful experiences with friends and family or catch up on
+                your favorite shows on the flat-screen TV after a day of
+                exploration.
+                <br />
+                <br />
+                Our beautifully renovated space boasts a warm and cozy bedroom
+                that invites rest, alongside a modern bathroom stocked with
+                complimentary toiletries and a hairdryer. The fully equipped
+                kitchen is perfect for whipping up a casual meal to enjoy at your
+                own pace.
+              </p>
+              {!expanded && (
+                <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-full bg-gradient-to-t from-white to-transparent" />
+              )}
+              <button
+                type="button"
+                className="mt-3 text-sm font-semibold text-neutral-900 underline underline-offset-2 hover:text-brand"
+                onClick={() => setExpanded((v) => !v)}
+              >
+                {expanded ? "Show less" : "Show more"}
+              </button>
+            </div>
+
+            <h3 className="mt-12 text-xl font-semibold text-neutral-900 md:text-2xl">
+              About this property
+            </h3>
+            <div className="mt-4 space-y-4 text-base text-neutral-600 md:text-lg">
+              <p>
+                Reliable info: Guests say the description and photos for this
+                property are very accurate.
+              </p>
+              <div>
+                <h4 className="text-base font-semibold text-neutral-900">
+                  Comfortable living space
+                </h4>
+                <ul className="mt-2 list-disc space-y-1 pl-6">
+                  <li>
+                    Central am Brukenthal in Sibiu offers a one-bedroom
+                    apartment with a terrace and free WiFi. The ground-floor unit
+                    features a kitchenette, dining area, and a sofa bed.
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-neutral-900">
+                  Modern amenities
+                </h4>
+                <ul className="mt-2 list-disc space-y-1 pl-6">
+                  <li>
+                    Guests enjoy a fully equipped kitchen with a refrigerator,
+                    stovetop, microwave, and coffee machine. Additional amenities
+                    include a terrace, patio, outdoor furniture, and a dining
+                    table.
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-base font-semibold text-neutral-900">
+                  Convenient location
+                </h4>
+                <ul className="mt-2 list-disc space-y-1 pl-6">
+                  <li>
+                    Located in the heart of Sibiu&apos;s Old Town, the apartment
+                    is within walking distance of major attractions like Piata
+                    Mare and the Brukenthal Palace.
+                  </li>
+                  <li>
+                    Located 2.5 mi from Sibiu International Airport, the apartment
+                    is near attractions such as The Stairs Passage (a few steps),
+                    The Council Tower of Sibiu (3-minute walk), and Piata Mare
+                    Sibiu (656 feet). Highly rated for its central location and
+                    room cleanliness.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <aside className="lg:pt-2">
+            <div className="sticky top-24 rounded-xl border border-neutral-200 bg-white p-6 shadow-md lg:top-28">
+              <div className="flex flex-wrap items-baseline gap-1">
+                <span className="text-2xl font-semibold text-neutral-900">
+                  €30
+                </span>
+                <span className="text-neutral-600">night</span>
+              </div>
+              <p className="mt-2 text-sm text-neutral-600">
+                Minimum 2 nights. Select dates on the booking page.
+              </p>
+              <Link
+                href="/book-your-stay"
+                className="mt-6 flex w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
+              >
+                Check availability
+              </Link>
+              <p className="mt-4 text-center text-xs text-neutral-500">
+                You won&apos;t be charged yet
+              </p>
+            </div>
+          </aside>
+        </div>
+
         {expandedPhoto && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
             onClick={() => setExpandedPhoto(null)}
           >
             <div
-              className="relative max-w-3xl w-full flex flex-col items-center"
+              className="relative w-full max-w-[min(100vw-2rem,56rem)]"
               onClick={(e) => e.stopPropagation()}
             >
               <button
-                className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-lg hover:bg-gray-200 transition"
+                type="button"
+                className="absolute -top-1 right-0 z-10 rounded-full bg-white p-2 shadow-lg hover:bg-neutral-100 md:right-2"
                 onClick={() => setExpandedPhoto(null)}
                 aria-label="Close expanded photo"
               >
@@ -145,7 +282,7 @@ export default function Home() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-6 h-6 text-gray-700"
+                  className="h-6 w-6 text-neutral-700"
                 >
                   <path
                     strokeLinecap="round"
@@ -157,119 +294,15 @@ export default function Home() {
               <Image
                 src={expandedPhoto}
                 alt="Expanded apartment photo"
-                width={900}
-                height={700}
-                className="rounded-xl shadow-2xl object-contain max-h-[80vh] w-auto h-auto"
+                width={1200}
+                height={900}
+                sizes="(max-width: 768px) 100vw, 56rem"
+                className="max-h-[80vh] w-full rounded-2xl object-contain"
                 priority
               />
             </div>
           </div>
         )}
-      </section>
-      {/* Description at the bottom as before */}
-      <section className="flex justify-center w-full">
-        <div className="bg-white/80 rounded-2xl shadow-xl p-8 max-w-7xl w-full">
-          <h2 className="text-2xl font-semibold mb-4 text-blue-700">
-            A Home in the Heart of the City
-          </h2>
-          <div className="relative">
-            <p
-              className={`text-lg text-gray-700 mb-4 max-w-xl transition-all duration-300 ease-in-out ${
-                expanded ? "" : "max-h-[10rem] overflow-hidden line-clamp-2"
-              }`}
-              style={{
-                display: "-webkit-box",
-                WebkitLineClamp: expanded ? "none" : 10,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              Welcome to Central am Brukenthal, your cozy haven set in the
-              enchanting heart of Sibiu&apos;s Old Town. Here, you&apos;ll find
-              an inviting atmosphere that feels just like home. As the summer
-              heat envelops the city, our apartment remains a refreshing
-              retreat, maintaining a perfect temperature that ensures a
-              comfortable night&apos;s sleep, even on the warmest of evenings.
-              <br />
-              <br />
-              Imagine unwinding on your private terrace, sipping a cool drink
-              while soaking in the lively ambiance of the bustling streets
-              below. With fast and free WiFi, you can easily share your
-              delightful experiences with friends and family or catch up on your
-              favorite shows on the flat-screen TV after a day of exploration.
-              <br />
-              <br />
-              Our beautifully renovated space boasts a warm and cozy bedroom
-              that invites rest, alongside a modern bathroom stocked with
-              complimentary toiletries and a hairdryer. The fully equipped
-              kitchen is perfect for whipping up a casual meal to enjoy at your
-              own pace.
-            </p>
-            {!expanded && (
-              <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
-            )}
-            <button
-              className="text-blue-700 font-semibold underline hover:text-blue-900 transition-colors mt-2"
-              onClick={() => setExpanded((v) => !v)}
-            >
-              {expanded ? "Show less" : "Read more"}
-            </button>
-          </div>
-          <br />
-          <br />
-
-          <h3 className="text-2xl font-semibold mb-4 text-blue-700">
-            About this property
-          </h3>
-          <div className="text-lg text-gray-700 space-y-3">
-            <p>
-              About this property Reliable info: Guests say the description and
-              photos for this property are very accurate.
-            </p>
-            <div>
-              <h4 className="text-base font-semibold text-gray-900 mt-2 mb-1">
-                Comfortable Living Space
-              </h4>
-              <ul className="list-disc pl-8 space-y-1">
-                <li>
-                  Central am Brukenthal in Sibiu offers a one-bedroom apartment
-                  with a terrace and free WiFi. The ground-floor unit features a
-                  kitchenette, dining area, and a sofa bed.
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-base font-semibold text-gray-900 mt-2 mb-1">
-                Modern Amenities
-              </h4>
-              <ul className="list-disc pl-8 space-y-1">
-                <li>
-                  Guests enjoy a fully equipped kitchen with a refrigerator,
-                  stovetop, microwave, and coffee machine. Additional amenities
-                  include a terrace, patio, outdoor furniture, and a dining table.
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-base font-semibold text-gray-900 mt-2 mb-1">
-                Convenient Location
-              </h4>
-              <ul className="list-disc pl-8 space-y-1">
-                <li>
-                  Located in the heart of Sibiu&apos;s Old Town, the apartment is
-                  within walking distance of major attractions like Piata Mare and
-                  the Brukenthal Palace.
-                </li>
-                <li>
-                  Located 2.5 mi from Sibiu International Airport, the apartment is
-                  near attractions such as The Stairs Passage (a few steps), The
-                  Council Tower of Sibiu (3-minute walk), and Piata Mare Sibiu (656
-                  feet). Highly rated for its central location and room cleanliness.
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </section>
     </main>
   );

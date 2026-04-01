@@ -68,15 +68,15 @@ export default function AdminPage() {
 
   if (isAdmin !== true)
     return (
-      <div className="p-8 text-red-600 font-bold flex flex-col items-center">
+      <div className="flex min-h-screen flex-col items-center bg-neutral-50 p-8 font-medium text-red-600">
         {error && <div className="mb-2 text-red-700">{error}</div>}
-        <form onSubmit={handleLogin} className="flex flex-col gap-2 w-72">
+        <form onSubmit={handleLogin} className="flex w-72 flex-col gap-2">
           <input
             type="email"
             placeholder="Admin Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="p-2 border rounded"
+            className="rounded-lg border border-neutral-300 bg-white p-2 text-neutral-900"
             required
           />
           <input
@@ -84,19 +84,19 @@ export default function AdminPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="p-2 border rounded"
+            className="rounded-lg border border-neutral-300 bg-white p-2 text-neutral-900"
             required
           />
           <button
             type="submit"
-            className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="mt-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground transition hover:opacity-95"
           >
             Login as Admin
           </button>
         </form>
         <Link
           href="/"
-          className="mt-4 text-blue-600 underline hover:text-blue-800"
+          className="mt-4 text-neutral-700 underline underline-offset-2 hover:text-primary"
         >
           Back
         </Link>
@@ -104,14 +104,15 @@ export default function AdminPage() {
     );
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-neutral-50">
       {/* Sidebar */}
-      <aside className="w-64 bg-gray-100 p-6 border-r flex flex-col">
+      <aside className="flex w-64 flex-col border-r border-neutral-200 bg-white p-6">
         <button
-          className={`text-left py-2 px-4 rounded mb-2 font-semibold ${
+          type="button"
+          className={`mb-2 rounded-lg px-4 py-2 text-left font-semibold ${
             selectedTab === "bookings"
-              ? "bg-blue-600 text-white"
-              : "hover:bg-blue-200"
+              ? "bg-primary text-primary-foreground"
+              : "text-neutral-700 hover:bg-neutral-100"
           }`}
           onClick={() => setSelectedTab("bookings")}
         >
@@ -120,13 +121,13 @@ export default function AdminPage() {
         {/* Add more tabs here if needed */}
       </aside>
       {/* Main Content */}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 text-neutral-900">
         {selectedTab === "bookings" && (
           <div>
-            <h1 className="text-2xl font-bold mb-6">Bookings</h1>
-            <table className="min-w-full border border-gray-300">
+            <h1 className="mb-6 text-2xl font-semibold">Bookings</h1>
+            <table className="min-w-full overflow-hidden rounded-lg border border-neutral-200 bg-white">
               <thead>
-                <tr className="bg-gray-200">
+                <tr className="bg-neutral-100">
                   <th className="py-2 px-4 border-b">Person</th>
                   <th className="py-2 px-4 border-b">Dates Booked</th>
                   <th className="py-2 px-4 border-b">Platform</th>
@@ -140,7 +141,7 @@ export default function AdminPage() {
                       {booking.dates.map((date, i) => (
                         <span
                           key={i}
-                          className="inline-block bg-blue-100 text-blue-800 rounded px-2 py-1 mr-1 mb-1 text-xs"
+                          className="mb-1 mr-1 inline-block rounded bg-neutral-100 px-2 py-1 text-xs text-neutral-800"
                         >
                           {date}
                         </span>

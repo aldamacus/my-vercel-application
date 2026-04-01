@@ -1,15 +1,16 @@
 "use client";
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import Script from "next/script";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const inter = Inter({
+const fontSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: "swap",
+  variable: "--font-sans",
 });
 
 export default function RootLayout({
@@ -34,7 +35,7 @@ export default function RootLayout({
   }, [pathname, router]);
 
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={fontSans.variable}>
       <head>
         <title>Central am Brukenthal | Historic Apartment in Sibiu</title>
         <meta
@@ -61,13 +62,11 @@ export default function RootLayout({
             }
           `}
         </script>
-        {/* ...other head tags... */}
       </head>
-      <body>
+      <body className={`${fontSans.className} min-h-screen flex flex-col`}>
         <Header />
-        <div className="bg-white-100">{children}</div>
-        <Footer></Footer>
-        {/* Enable Deep Link Automation for your site */}
+        <div className="flex-1 w-full bg-neutral-50">{children}</div>
+        <Footer />
         <Script
           src="https://www.anrdoezrs.net/am/101457820/include/allCj/exclude/5096493/impressions/page/am.js"
           strategy="afterInteractive"

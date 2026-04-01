@@ -44,34 +44,34 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
       onSubmit={sendEmail}
       className="space-y-4 w-full max-w-md mx-auto p-2 sm:p-4"
     >
-      <label className="block text-sm font-medium text-blue-900 mb-1">
+      <label className="mb-1 block text-sm font-medium text-neutral-900">
         Name:
         <input
           type="text"
           name="name"
           required
           maxLength={100}
-          className="mt-1 block w-full px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 text-base bg-white"
+          className="mt-1 block w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </label>
-      <label className="block text-sm font-medium text-blue-900 mb-1">
+      <label className="mb-1 block text-sm font-medium text-neutral-900">
         Your Email:
         <input
           type="email"
           name="email"
           required
           maxLength={100}
-          className="mt-1 block w-full px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 text-base bg-white"
+          className="mt-1 block w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
       </label>
-      <label className="block text-sm font-medium text-blue-900 mb-1">
+      <label className="mb-1 block text-sm font-medium text-neutral-900">
         Message:
         <textarea
           name="message"
           rows={5}
           maxLength={500}
           required
-          className="mt-1 block w-full px-4 py-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-500 text-base bg-white resize-none"
+          className="mt-1 block w-full resize-none rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/30"
         ></textarea>
         <span className="block text-xs text-gray-500 mt-1">
           Max 500 characters
@@ -79,7 +79,7 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
       </label>
       <button
         type="submit"
-        className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors duration-200 text-base mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
+        className="mt-2 w-full rounded-lg bg-primary px-4 py-2 text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
         disabled={sending}
       >
         {sending ? "Sending..." : "Send Message"}

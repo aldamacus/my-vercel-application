@@ -121,9 +121,9 @@ export default function BookYourStay() {
   };
 
   return (
-    <div className="py-8 flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 md:px-10 bg-gradient-to-b from-white via-blue-50 to-blue-100 w-full max-w-7xl mx-auto">
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 w-full text-center text-blue-900 drop-shadow-sm">
-        Central Am Brukenthal
+    <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-center justify-center bg-gradient-to-b from-white via-neutral-50 to-neutral-100 px-4 py-8 sm:px-6 md:px-10">
+      <h1 className="mb-4 w-full text-center text-2xl font-semibold tracking-tight text-neutral-900 sm:text-3xl md:text-4xl">
+        Central am Brukenthal
       </h1>
       <div className="w-full max-w-6xl mx-auto px-10 sm:px-12 md:px-14">
         <Carousel className="w-full">
@@ -135,7 +135,7 @@ export default function BookYourStay() {
               >
                 <button
                   type="button"
-                  className="w-full p-1 text-left cursor-pointer rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  className="w-full cursor-pointer rounded-lg p-1 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   onClick={() => setExpandedPhoto(src)}
                   aria-label={`View apartment photo ${index + 1} larger`}
                 >
@@ -204,9 +204,9 @@ export default function BookYourStay() {
       {/* Calendar and Booked Dates side by side in the middle */}
       <div className="w-full flex flex-col md:flex-row gap-8 items-stretch justify-center mt-8 max-w-6xl">
         <div className="md:w-1/2 w-full flex flex-col gap-6 items-center justify-center">
-          <div className="w-full max-w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-4 sm:p-6 border-2 border-blue-200">
+          <div className="flex w-full max-w-full flex-col items-center rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
             {calendarLoading && (
-              <p className="text-sm text-blue-700 mb-2 self-start">
+              <p className="mb-2 self-start text-sm text-neutral-600">
                 Loading availability…
               </p>
             )}
@@ -229,7 +229,7 @@ export default function BookYourStay() {
               disabled={disabled}
               showOutsideDays
               numberOfMonths={1}
-              className="rounded-lg border-2 border-blue-400 shadow-md focus:ring-2 focus:ring-[#FF5A5F] focus:border-blue-400 text-gray-900 w-full max-w-xl p-2 sm:p-4"
+              className="w-full max-w-xl rounded-xl border border-neutral-200 p-2 text-neutral-900 shadow-sm focus:border-neutral-400 focus:ring-2 focus:ring-primary/30 sm:p-4"
               modifiers={{
                 booked: bookedDates,
                 selected: userSelectedDates,
@@ -240,7 +240,7 @@ export default function BookYourStay() {
                   "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700 line-through",
                 selected: "bg-green-200 text-green-900 font-bold",
                 today:
-                  "bg-blue-200 text-blue-900 border-blue-700 border-2 font-bold",
+                  "bg-neutral-100 text-neutral-900 border-neutral-400 border-2 font-bold",
               }}
               modifiersStyles={{
                 booked: {
@@ -254,9 +254,9 @@ export default function BookYourStay() {
                   fontWeight: "bold",
                 },
                 today: {
-                  backgroundColor: "#bfdbfe", // Tailwind blue-200
-                  color: "#1e40af", // Tailwind blue-900
-                  border: "2px solid #1d4ed8", // Tailwind blue-700
+                  backgroundColor: "#f5f5f5",
+                  color: "#171717",
+                  border: "2px solid #a3a3a3",
                   fontWeight: "bold",
                 },
               }}
@@ -268,19 +268,18 @@ export default function BookYourStay() {
             />
 
             <button
-              className="mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:shadow-2xl transition-all text-lg tracking-wide"
+              type="button"
+              className="mt-6 w-full rounded-lg border border-neutral-900 bg-white px-6 py-3 text-lg font-semibold text-neutral-900 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40"
               onClick={() => setUserSelectedDates([])}
               disabled={userSelectedDates.length === 0}
             >
-              <span className="flex items-center bg-blue-700 gap-2 justify-center">
-                Clear Selected Dates
-              </span>
+              Clear selected dates
             </button>
           </div>
         </div>
-        <div className="md:w-1/2 w-full flex flex-col items-start bg-white/90 rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-200 min-h-[320px] mt-6 md:mt-0">
-          <h2 className="font-semibold text-lg sm:text-xl mb-2 text-blue-800">
-            Your Trip
+        <div className="mt-6 flex min-h-[320px] w-full flex-col items-start rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6 md:mt-0 md:w-1/2">
+          <h2 className="mb-2 text-lg font-semibold text-neutral-900 sm:text-xl">
+            Your trip
           </h2>
           <div className="mb-2 text-red-600 font-semibold text-sm">
             A minimum stay of 2 nights is required.
@@ -331,7 +330,7 @@ export default function BookYourStay() {
             Booked dates are blocked for new reservations. For special requests,
             <button
               type="button"
-              className="text-blue-700 underline hover:text-blue-900 ml-1 font-semibold focus:outline-none cursor-pointer"
+              className="ml-1 cursor-pointer font-semibold text-neutral-900 underline underline-offset-2 hover:text-primary focus:outline-none"
               onClick={() => setShowContactForm(true)}
             >
               contact us directly
@@ -339,7 +338,7 @@ export default function BookYourStay() {
             !
             {showContactForm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md relative animate-fade-in">
+                <div className="relative w-full max-w-md animate-fade-in rounded-2xl border border-neutral-200 bg-white p-6 shadow-xl">
                   <button
                     className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 bg-gray-100 rounded-full p-2 focus:outline-none"
                     onClick={() => setShowContactForm(false)}
@@ -360,8 +359,8 @@ export default function BookYourStay() {
                       />
                     </svg>
                   </button>
-                  <h3 className="text-lg font-bold text-blue-900 mb-4 text-center">
-                    Contact Us
+                  <h3 className="mb-4 text-center text-lg font-semibold text-neutral-900">
+                    Contact us
                   </h3>
                   <ContactForm
                     onSuccess={() => {
@@ -419,9 +418,9 @@ export default function BookYourStay() {
             )}
           </div>
           <button
-            className={`mt-6 w-full px-6 py-3 bg-blue-700 text-white font-bold rounded-lg shadow-lg hover:bg-blue-800 transition-all text-lg tracking-wide ${
+            className={`mt-6 w-full rounded-lg bg-primary px-6 py-3 text-lg font-semibold text-primary-foreground shadow-md transition hover:opacity-95 ${
               userSelectedDates.length < 2
-                ? "opacity-50 cursor-not-allowed"
+                ? "cursor-not-allowed opacity-50"
                 : ""
             }`}
             onClick={() =>
@@ -440,8 +439,8 @@ export default function BookYourStay() {
       />
       {/* Details and Map side by side at the bottom */}
       <div className="w-full flex flex-col md:flex-row gap-8 mt-12">
-        <div className="md:w-1/2 w-full bg-white/80 rounded-xl shadow-lg p-6 mb-6 md:mb-0 order-1 md:order-none">
-          <ul className="list-disc pl-5 text-gray-700 text-base space-y-2">
+        <div className="order-1 mb-6 w-full rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm md:order-none md:mb-0 md:w-1/2">
+          <ul className="list-disc space-y-2 pl-5 text-base text-neutral-600">
             <li>Spacious living room with lots of natural light</li>
             <li>Fully equipped modern kitchen</li>
             <li>Comfortable queen-size bed and cozy linens</li>

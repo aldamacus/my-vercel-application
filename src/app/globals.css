@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Airbnb-inspired tokens: neutral chrome + coral primary (not Airbnb IP) */
+@theme {
+  --color-brand: #e61e4d;
+  --color-brand-hover: #d70466;
+  --color-primary: #e61e4d;
+  --color-primary-foreground: #ffffff;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+@layer base {
+  body {
+    @apply antialiased text-neutral-900 bg-white;
+  }
+}
