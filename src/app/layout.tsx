@@ -17,32 +17,21 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Device detection and redirect logic
-  if (typeof window !== "undefined") {
-    const router = require("next/navigation").useRouter();
-    const pathname = require("next/navigation").usePathname();
-    useEffect(() => {
-      const isMobile =
-        typeof window !== "undefined" &&
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        );
-      if (
-        isMobile &&
-        pathname === "/book-your-stay" &&
-        typeof window !== "undefined"
-      ) {
-        router.replace("/book-your-stay-mobile");
-      }
-      if (
-        !isMobile &&
-        pathname === "/book-your-stay-mobile" &&
-        typeof window !== "undefined"
-      ) {
-        router.replace("/book-your-stay");
-      }
-    }, [pathname]);
-  }
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    if (isMobile && pathname === "/book-your-stay") {
+      router.replace("/book-your-stay-mobile");
+    }
+    if (!isMobile && pathname === "/book-your-stay-mobile") {
+      router.replace("/book-your-stay");
+    }
+  }, [pathname, router]);
 
   return (
     <html lang="en" className={inter.className}>

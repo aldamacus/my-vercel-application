@@ -1,40 +1,40 @@
-"use client"; // This directive is important to make this a Client Component (can use browser APIs)
+"use client";
 
 import { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
 
-// Initialize EmailJS with your Public Key
-emailjs.init(process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY);
+const emailJsPublicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+if (emailJsPublicKey) {
+  emailjs.init(emailJsPublicKey);
+}
 
-export default function ContactForm({ onSuccess }) {
-  // useRef to access the form DOM node
-  const formRef = useRef();
+export type ContactFormProps = {
+  onSuccess?: () => void;
+};
+
+export default function ContactForm({ onSuccess }: ContactFormProps) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [sending, setSending] = useState(false);
 
-  const sendEmail = (e) => {
-    e.preventDefault(); // prevent default form submission behavior
+  const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (!formRef.current) return;
     const form = formRef.current;
     setSending(true);
-    // Use EmailJS to send form data
     emailjs
       .sendForm(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
         form
       )
-      .then((response) => {
+      .then(() => {
         setSending(false);
-        if (onSuccess && typeof onSuccess === "function") {
-          onSuccess();
-        }
+        onSuccess?.();
       })
-      .catch((error) => {
+      .catch(() => {
         setSending(false);
-        // Show an error message to the user if needed
         alert("Failed to send message. Please try again later.");
       });
-    // Optionally, reset the form or handle UI state after sending
     form.reset();
   };
 

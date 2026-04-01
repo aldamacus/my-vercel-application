@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -28,11 +29,13 @@ export default function Header({ font = "" }: { font?: string }) {
                 className="flex items-center gap-2 text-xs md:text-base font-semibold transition-colors hover:text-yellow-400 text-gray-100"
               >
                 <span>Book your stay</span>
-                <img
+                <Image
                   src="/beds-bedroom-svgrepo-com.svg"
+                  alt="Bed icon"
                   width={16}
                   height={16}
                   className="hidden md:inline"
+                  unoptimized
                 />
               </Link>
               <Link
@@ -40,11 +43,13 @@ export default function Header({ font = "" }: { font?: string }) {
                 className="flex items-center gap-2 text-xs md:text-base font-semibold hover:text-yellow-400 transition-colors"
               >
                 <span>Visit our County</span>
-                <img
+                <Image
                   src="/city-svgrepo-com.svg"
+                  alt="City icon"
                   width={16}
                   height={16}
                   className="hidden md:inline"
+                  unoptimized
                 />
               </Link>
               <Link

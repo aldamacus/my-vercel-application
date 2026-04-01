@@ -1,41 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import ContactForm from "@/components/ui/ContactForm";
+import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
 import { Calendar } from "@/components/ui/calendar";
 import PaymentModal from "@/components/PaymentModal";
 
 export default function BookYourStayMobile() {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [bookedDates, setBookedDates] = useState<Date[]>([]);
+  const { bookedDates, loading: calendarLoading, error: calendarError, refetch } =
+    useMergedIcalAvailability(60 * 1000);
   const [showPayment, setShowPayment] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
-
-  // Fetch Airbnb calendar and update bookedDates
-  const updateBookedDatesFromAirbnb = async () => {
-    try {
-      const res = await fetch("/api/airbnb-calendar");
-      const events = await res.json();
-      const dates: Date[] = [];
-      for (const event of events) {
-        if (event.type === "VEVENT" && event.start && event.end) {
-          const current = new Date(event.start);
-          const end = new Date(event.end);
-          while (current < end) {
-            dates.push(new Date(current));
-            current.setDate(current.getDate() + 1);
-          }
-        }
-      }
-      setBookedDates(dates);
-    } catch (e) {
-      console.error("Failed to fetch Airbnb calendar", e);
-    }
-  };
 
   const disabled = (date: Date) => {
     const today = new Date();
@@ -115,17 +94,6 @@ export default function BookYourStayMobile() {
     setDate(selected);
   };
 
-  useEffect(() => {
-    updateBookedDatesFromAirbnb();
-    intervalRef.current = setInterval(
-      updateBookedDatesFromAirbnb,
-      60 * 1000
-    );
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
-
   return (
     <div className="py-4 flex flex-col items-center min-h-screen px-2 bg-gradient-to-b from-white via-blue-50 to-blue-100 w-full max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-2 w-full text-center text-blue-900 drop-shadow-sm">
@@ -149,6 +117,23 @@ export default function BookYourStayMobile() {
       </div>
       {/* Calendar */}
       <div className="w-full flex flex-col items-center bg-white rounded-2xl shadow-lg p-2 border-2 border-blue-200 mb-4">
+        {calendarLoading && (
+          <p className="text-xs text-blue-700 mb-2 self-start px-1">
+            Loading availability…
+          </p>
+        )}
+        {calendarError && (
+          <div className="w-full mb-2 rounded-lg border border-amber-200 bg-amber-50 px-2 py-2 text-xs text-amber-950 flex flex-wrap items-center gap-2 justify-between">
+            <span>{calendarError}</span>
+            <button
+              type="button"
+              className="shrink-0 rounded-md bg-amber-800 px-2 py-1 text-xs font-semibold text-white hover:bg-amber-900"
+              onClick={() => void refetch()}
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <Calendar
           mode="single"
           selected={date}

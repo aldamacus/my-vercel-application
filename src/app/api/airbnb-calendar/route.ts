@@ -1,31 +1,47 @@
 import { log } from "console";
+import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import ical from "node-ical";
 
-const AIRBNB_ICAL_URL =
-  "https://www.airbnb.com/calendar/ical/29024999.ics?s=7b9c64be18f0beb76df8dd1ba6711ba6";
+const REVALIDATE_SECONDS = 300;
 
-const BOOKING_ICAL_URL =
-  "https://admin.booking.com/hotel/hoteladmin/ical.html?t=144ce200-d791-432e-8b20-ea3acdd0edb7";
+const MISSING_ENV = "MISSING_ICAL_ENV";
 
-export async function GET() {
-  try {
-    // Fetch Airbnb events
-    const airbnbData = await ical.async.fromURL(AIRBNB_ICAL_URL);
+const getMergedCalendarEvents = unstable_cache(
+  async () => {
+    const airbnbUrl = process.env.AIRBNB_ICAL_URL?.trim();
+    const bookingUrl = process.env.BOOKING_ICAL_URL?.trim();
+    if (!airbnbUrl || !bookingUrl) {
+      throw new Error(MISSING_ENV);
+    }
+
+    const airbnbData = await ical.async.fromURL(airbnbUrl);
     const airbnbEvents = Object.values(airbnbData).filter(
       (event) => event.type === "VEVENT"
     );
 
-    // Fetch Booking.com events
-    const bookingData = await ical.async.fromURL(BOOKING_ICAL_URL);
+    const bookingData = await ical.async.fromURL(bookingUrl);
     const bookingEvents = Object.values(bookingData).filter(
       (event) => event.type === "VEVENT"
     );
 
-    // Merge all booked events
-    const allEvents = [...airbnbEvents, ...bookingEvents];
+    return [...airbnbEvents, ...bookingEvents];
+  },
+  ["merged-ical-events"],
+  { revalidate: REVALIDATE_SECONDS }
+);
+
+export async function GET() {
+  try {
+    const allEvents = await getMergedCalendarEvents();
     return NextResponse.json(allEvents);
   } catch (e) {
+    if (e instanceof Error && e.message === MISSING_ENV) {
+      return NextResponse.json(
+        { error: "Calendar not configured" },
+        { status: 503 }
+      );
+    }
     log("Error fetching calendars:", e);
     const errorMessage =
       typeof e === "object" && e !== null && "message" in e

@@ -1,5 +1,5 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-token is ti29V5b5bLRXEPE8DCHstJts
+
 ## Getting Started
 
 First, run the development server:
@@ -35,6 +35,17 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
+## Environment variables
 
-Check out our [Neon postgress integration](https://neon.com/docs/get-started-with-neon/query-with-neon-sql-editor)
+Merged availability uses private iCal URLs from Airbnb and Booking.com. Copy [`.env.example`](.env.example) to `.env.local` and set `AIRBNB_ICAL_URL` and `BOOKING_ICAL_URL`. Use the same keys in the Vercel project under **Settings → Environment Variables**. Regenerate those links in each platform if they were ever exposed (for example in git history).
+
+EmailJS and PayPal use their respective `NEXT_PUBLIC_*` variables where configured in the app.
+
+## Operations
+
+On [Vercel](https://vercel.com), use **Runtime Logs** for the production deployment to spot failures or slow responses from `/api/airbnb-calendar`. Optional: enable **Speed Insights** and **Web Analytics** on the project for Core Web Vitals and traffic.
+
+## Neon Postgres
+
+Check out the [Neon Postgres integration](https://neon.com/docs/get-started-with-neon/query-with-neon-sql-editor) if you add a database later.
 
