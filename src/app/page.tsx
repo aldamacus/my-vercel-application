@@ -1,7 +1,16 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { addDays } from "date-fns";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
+import {
+  findNextAvailableStay,
+  parseDateInputLocal,
+  toISODateLocal,
+  validateStayRange,
+} from "@/lib/stayAvailability";
 
 const GALLERY_MAIN = "/163426986.jpg";
 const GALLERY_TILES = [
@@ -12,8 +21,42 @@ const GALLERY_TILES = [
 ] as const;
 
 export default function Home() {
+  const router = useRouter();
+  const { bookedDates, loading: calendarLoading, error: calendarError } =
+    useMergedIcalAvailability(null);
+
   const [expanded, setExpanded] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
+  const [checkInStr, setCheckInStr] = useState("");
+  const [checkOutStr, setCheckOutStr] = useState("");
+  const [availabilityError, setAvailabilityError] = useState<string | null>(
+    null
+  );
+  const datesPrefilledRef = useRef(false);
+
+  const todayStr = useMemo(() => toISODateLocal(new Date()), []);
+  const minCheckOutStr = useMemo(() => {
+    const ci = parseDateInputLocal(checkInStr);
+    const base = ci ?? parseDateInputLocal(todayStr)!;
+    return toISODateLocal(addDays(base, 2));
+  }, [checkInStr, todayStr]);
+
+  useEffect(() => {
+    if (!checkOutStr) return;
+    const co = parseDateInputLocal(checkOutStr);
+    const minCo = parseDateInputLocal(minCheckOutStr);
+    if (co && minCo && co < minCo) setCheckOutStr("");
+  }, [checkInStr, minCheckOutStr, checkOutStr]);
+
+  useEffect(() => {
+    if (calendarLoading || calendarError || datesPrefilledRef.current) return;
+    datesPrefilledRef.current = true;
+    const next = findNextAvailableStay(bookedDates, { minNights: 2 });
+    if (next) {
+      setCheckInStr(toISODateLocal(next.checkIn));
+      setCheckOutStr(toISODateLocal(next.checkOut));
+    }
+  }, [calendarLoading, calendarError, bookedDates]);
 
   useEffect(() => {
     if (!expandedPhoto) return;
@@ -23,6 +66,47 @@ export default function Home() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [expandedPhoto]);
+
+  function handleCheckAvailability(e: React.FormEvent) {
+    e.preventDefault();
+    setAvailabilityError(null);
+
+    const checkIn = parseDateInputLocal(checkInStr);
+    const checkOut = parseDateInputLocal(checkOutStr);
+
+    if (!checkInStr || !checkOutStr) {
+      setAvailabilityError("Please choose both check-in and check-out dates.");
+      return;
+    }
+    if (!checkIn || !checkOut) {
+      setAvailabilityError("Please use valid dates.");
+      return;
+    }
+    if (calendarLoading) {
+      setAvailabilityError(
+        "Still loading availability. Please wait a moment and try again."
+      );
+      return;
+    }
+    if (calendarError) {
+      setAvailabilityError(
+        "Could not load the calendar. Please try again in a moment or open Book your stay to pick dates."
+      );
+      return;
+    }
+
+    const result = validateStayRange(checkIn, checkOut, bookedDates);
+    if (!result.ok) {
+      setAvailabilityError(result.message);
+      return;
+    }
+
+    const q = new URLSearchParams({
+      checkIn: checkInStr,
+      checkOut: checkOutStr,
+    });
+    router.push(`/book-your-stay?${q.toString()}`);
+  }
 
   return (
     <main className="bg-white pb-16 pt-2">
@@ -246,14 +330,69 @@ export default function Home() {
                 <span className="text-neutral-600">night</span>
               </div>
               <p className="mt-2 text-sm text-neutral-600">
-                Minimum 2 nights. Select dates on the booking page.
+                Minimum 2 nights. We&apos;ll check live calendar before you
+                continue.
               </p>
-              <Link
-                href="/book-your-stay"
-                className="mt-6 flex w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
+              <form
+                onSubmit={handleCheckAvailability}
+                className="mt-4 space-y-3"
               >
-                Check availability
-              </Link>
+                <div>
+                  <label
+                    htmlFor="home-check-in"
+                    className="text-sm font-medium text-neutral-800"
+                  >
+                    Check-in
+                  </label>
+                  <input
+                    id="home-check-in"
+                    type="date"
+                    value={checkInStr}
+                    min={todayStr}
+                    onChange={(e) => {
+                      setCheckInStr(e.target.value);
+                      setAvailabilityError(null);
+                    }}
+                    className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="home-check-out"
+                    className="text-sm font-medium text-neutral-800"
+                  >
+                    Check-out
+                  </label>
+                  <input
+                    id="home-check-out"
+                    type="date"
+                    value={checkOutStr}
+                    min={minCheckOutStr}
+                    onChange={(e) => {
+                      setCheckOutStr(e.target.value);
+                      setAvailabilityError(null);
+                    }}
+                    className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                    required
+                  />
+                </div>
+                {availabilityError && (
+                  <p
+                    className="text-sm text-red-600"
+                    role="alert"
+                  >
+                    {availabilityError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={calendarLoading}
+                  className="flex w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-center text-base font-semibold text-primary-foreground shadow-sm transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {calendarLoading ? "Loading calendar…" : "Check availability"}
+                </button>
+              </form>
               <p className="mt-4 text-center text-xs text-neutral-500">
                 You won&apos;t be charged yet
               </p>

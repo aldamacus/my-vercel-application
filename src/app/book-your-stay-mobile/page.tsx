@@ -13,7 +13,6 @@ export default function BookYourStayMobile() {
     useMergedIcalAvailability(60 * 1000);
   const [showPayment, setShowPayment] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
 
   const disabled = (date: Date) => {
@@ -244,27 +243,7 @@ export default function BookYourStayMobile() {
                   </svg>
                 </button>
                 <h3 className="mb-2 text-center text-base font-semibold text-neutral-900">Contact us</h3>
-                <ContactForm onSuccess={() => { setShowContactForm(false); setShowSuccess(true); }} />
-              </div>
-            </div>
-          )}
-          {showSuccess && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-              <div className="bg-white rounded-xl shadow-2xl p-4 w-full max-w-xs relative animate-fade-in flex flex-col items-center">
-                <button
-                  className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 bg-gray-100 rounded-full p-2 focus:outline-none"
-                  onClick={() => setShowSuccess(false)}
-                  aria-label="Close success message"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-                <svg className="w-10 h-10 text-green-500 mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                <div className="text-base font-semibold text-green-700 text-center mb-1">Message sent successfully!</div>
-                <div className="text-xs text-gray-600 text-center">Thank you for reaching out. We will get back to you soon.</div>
+                <ContactForm onClosed={() => setShowContactForm(false)} />
               </div>
             </div>
           )}

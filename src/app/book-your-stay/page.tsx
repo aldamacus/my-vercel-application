@@ -1,9 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ContactForm from "@/components/ui/ContactForm";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
+import {
+  parseDateInputLocal,
+  validateStayRange,
+} from "@/lib/stayAvailability";
 
 //import { DayPicker } from "react-day-picker";
 //import "react-day-picker/style.css";
@@ -20,14 +25,16 @@ import StayCalendar from "./Calendar";
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
 
-export default function BookYourStay() {
+function BookYourStayClient() {
+  const searchParams = useSearchParams();
+  const appliedFromQuery = useRef(false);
+
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { bookedDates, loading: calendarLoading, error: calendarError, refetch } =
     useMergedIcalAvailability(60 * 1000);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   // Array for user-selected dates (not Airbnb booked dates)
   const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
@@ -118,6 +125,26 @@ export default function BookYourStay() {
     }
     setDate(selected);
   };
+
+  useEffect(() => {
+    if (appliedFromQuery.current || calendarLoading || calendarError) return;
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+    if (!ci || !co) return;
+    const checkIn = parseDateInputLocal(ci);
+    const checkOut = parseDateInputLocal(co);
+    if (!checkIn || !checkOut) return;
+    const result = validateStayRange(checkIn, checkOut, bookedDates);
+    if (!result.ok) return;
+    setUserSelectedDates(result.nights);
+    setDate(result.nights[result.nights.length - 1]);
+    appliedFromQuery.current = true;
+  }, [
+    searchParams,
+    calendarLoading,
+    calendarError,
+    bookedDates,
+  ]);
 
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col items-center justify-center bg-gradient-to-b from-white via-neutral-50 to-neutral-100 px-4 py-8 sm:px-6 md:px-10">
@@ -326,56 +353,8 @@ export default function BookYourStay() {
                     Contact us
                   </h3>
                   <ContactForm
-                    onSuccess={() => {
-                      setShowContactForm(false);
-                      setShowSuccess(true);
-                    }}
+                    onClosed={() => setShowContactForm(false)}
                   />
-                </div>
-              </div>
-            )}
-            {showSuccess && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-xs relative animate-fade-in flex flex-col items-center">
-                  <button
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 bg-gray-100 rounded-full p-2 focus:outline-none"
-                    onClick={() => setShowSuccess(false)}
-                    aria-label="Close success message"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                  <svg
-                    className="w-12 h-12 text-green-500 mb-2"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <div className="text-lg font-semibold text-green-700 text-center mb-2">
-                    Message sent successfully!
-                  </div>
-                  <div className="text-sm text-gray-600 text-center">
-                    Thank you for reaching out. We will get back to you soon.
-                  </div>
                 </div>
               </div>
             )}
@@ -431,5 +410,19 @@ export default function BookYourStay() {
       {/* Load external script asynchronously using next/script */}
       {/* The following script is now loaded globally via layout.tsx using next/script. Remove this duplicate. */}
     </div>
+  );
+}
+
+export default function BookYourStayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] w-full items-center justify-center bg-gradient-to-b from-white via-neutral-50 to-neutral-100 text-neutral-600">
+          Loading booking…
+        </div>
+      }
+    >
+      <BookYourStayClient />
+    </Suspense>
   );
 }
