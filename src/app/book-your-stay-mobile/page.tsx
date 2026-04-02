@@ -5,13 +5,13 @@ import React, { useState } from "react";
 import ContactForm from "@/components/ui/ContactForm";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
 import { Calendar } from "@/components/ui/calendar";
-import PaymentModal from "@/components/PaymentModal";
+import ReserveStayForm from "@/components/ui/ReserveStayForm";
 
 export default function BookYourStayMobile() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { bookedDates, loading: calendarLoading, error: calendarError, refetch } =
     useMergedIcalAvailability(60 * 1000);
-  const [showPayment, setShowPayment] = useState(false);
+  const [showReserveModal, setShowReserveModal] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
 
@@ -249,18 +249,51 @@ export default function BookYourStayMobile() {
           )}
         </div>
         <button
+          type="button"
           className={`mt-4 w-full rounded-lg bg-primary px-4 py-2 text-base font-semibold text-primary-foreground shadow-md transition hover:opacity-95 ${userSelectedDates.length < 2 ? "cursor-not-allowed opacity-50" : ""}`}
-          onClick={() => userSelectedDates.length >= 2 && setShowPayment(true)}
+          onClick={() =>
+            userSelectedDates.length >= 2 && setShowReserveModal(true)
+          }
           disabled={userSelectedDates.length < 2}
         >
-          Pay with PayPal
+          Reserve your stay
         </button>
       </div>
-      <PaymentModal
-        open={showPayment}
-        onClose={() => setShowPayment(false)}
-        amount={userSelectedDates.length * 30 || 0}
-      />
+      {showReserveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3">
+          <div className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-4 shadow-xl">
+            <button
+              type="button"
+              className="absolute right-2 top-2 rounded-full bg-neutral-100 p-2 text-neutral-500 focus:outline-none"
+              onClick={() => setShowReserveModal(false)}
+              aria-label="Close reservation form"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="h-5 w-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <h3 className="mb-3 pr-8 text-center text-base font-semibold text-neutral-900">
+              Reserve your stay
+            </h3>
+            <ReserveStayForm
+              key={userSelectedDates.map((d) => d.getTime()).join(",")}
+              selectedDates={userSelectedDates}
+              onClosed={() => setShowReserveModal(false)}
+            />
+          </div>
+        </div>
+      )}
       {/* Details */}
       <div className="mb-4 w-full rounded-2xl border border-neutral-200 bg-white p-3 shadow-sm">
         <ul className="list-disc space-y-1 pl-4 text-xs text-neutral-600">
