@@ -100,7 +100,7 @@ export default function Home() {
             Beautifully historic apartment in downtown Sibiu
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-600 md:text-base">
-            <span>Up to 4 guests</span>
+            <span>Up to 2 guests</span>
             <span className="text-neutral-300" aria-hidden>
               ·
             </span>
@@ -108,7 +108,7 @@ export default function Home() {
             <span className="text-neutral-300" aria-hidden>
               ·
             </span>
-            <span>2 beds</span>
+            <span>1 bed</span>
             <span className="text-neutral-300" aria-hidden>
               ·
             </span>

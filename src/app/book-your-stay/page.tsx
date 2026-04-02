@@ -15,7 +15,7 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 import PaymentModal from "@/components/PaymentModal";
-import { Calendar } from "@/components/ui/calendar";
+import StayCalendar from "./Calendar";
 
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
@@ -87,8 +87,7 @@ export default function BookYourStay() {
   }
 
   // Update Calendar to allow only consecutive selection
-  const handleDateSelect = (selected: Date | undefined) => {
-    if (!selected) return;
+  const handleDateSelect = (selected: Date) => {
     const alreadySelected = userSelectedDates.some(
       (bd) => bd.toDateString() === selected.toDateString()
     );
@@ -222,49 +221,13 @@ export default function BookYourStay() {
                 </button>
               </div>
             )}
-            <Calendar
-              mode="single"
-              selected={date}
+            <StayCalendar
+              bookedDates={bookedDates}
+              userSelectedDates={userSelectedDates}
+              selectedDate={date}
+              isDateDisabled={disabled}
               onDayClick={handleDateSelect}
-              disabled={disabled}
-              showOutsideDays
-              numberOfMonths={1}
-              className="w-full max-w-xl rounded-xl border border-neutral-200 p-2 text-neutral-900 shadow-sm focus:border-neutral-400 focus:ring-2 focus:ring-primary/30 sm:p-4"
-              modifiers={{
-                booked: bookedDates,
-                selected: userSelectedDates,
-                today: [new Date()],
-              }}
-              modifiersClassNames={{
-                booked:
-                  "bg-gray-300 text-gray-500 cursor-not-allowed hover:bg-gray-400 hover:text-gray-700 line-through",
-                selected: "bg-green-200 text-green-900 font-bold",
-                today:
-                  "bg-neutral-100 text-neutral-900 border-neutral-400 border-2 font-bold",
-              }}
-              modifiersStyles={{
-                booked: {
-                  backgroundColor: "#e5e7eb", // Tailwind gray-300
-                  color: "#6b7280", // Tailwind gray-500
-                  cursor: "not-allowed",
-                },
-                selected: {
-                  backgroundColor: "#bbf7d0", // Tailwind green-200
-                  color: "#166534", // Tailwind green-900
-                  fontWeight: "bold",
-                },
-                today: {
-                  backgroundColor: "#f5f5f5",
-                  color: "#171717",
-                  border: "2px solid #a3a3a3",
-                  fontWeight: "bold",
-                },
-              }}
-              classNames={{
-                head_cell:
-                  "text-muted-foreground rounded-md w-14 h-14 font-normal text-base md:text-lg",
-                day: "size-14 h-14 w-14 p-0 font-semibold text-base md:text-lg aria-selected:opacity-100",
-              }}
+              className="w-full max-w-xl"
             />
 
             <button
