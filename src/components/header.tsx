@@ -3,7 +3,43 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSession, AUTH_CHANGE_EVENT, type Session } from "@/components/SignIn";
+
+function HeaderAuth() {
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    setSession(getSession());
+    const handler = () => setSession(getSession());
+    window.addEventListener(AUTH_CHANGE_EVENT, handler);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
+  }, []);
+
+  if (session) {
+    return (
+      <Link
+        href="/profile"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white ring-2 ring-white hover:bg-neutral-700 transition"
+        aria-label="My profile"
+        title={session.email}
+      >
+        {session.email[0].toUpperCase()}
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/#sign-in"
+      className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-white hover:text-neutral-900"
+    >
+      <LogIn size={14} aria-hidden />
+      Sign in
+    </Link>
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -80,6 +116,7 @@ export default function Header() {
         </nav>
 
         <div className="flex flex-shrink-0 items-center gap-2 md:gap-3">
+          <HeaderAuth />
           <a
             href="https://www.booking.com/Share-HyJ79e"
             target="_blank"

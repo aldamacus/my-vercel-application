@@ -6,10 +6,13 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "npx drizzle-kit push --config drizzle.local.config.ts",
+    "db:studio": "npx drizzle-kit studio --config drizzle.local.config.ts"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
+    "@neondatabase/serverless": "^1.0.2",
     "@paypal/react-paypal-js": "^8.8.3",
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-popover": "^1.1.14",
@@ -21,6 +24,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "^8.6.0",
     "google-auth-library": "^9.15.1",
     "lucide-react": "^0.511.0",
@@ -39,6 +43,9 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/tail": "2.2.3",
+    "dotenv": "^17.4.0",
+    "dotenv-cli": "^11.0.0",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "npm-force-resolutions": "^0.0.10",
