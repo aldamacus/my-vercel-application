@@ -17,18 +17,26 @@ export const profiles = pgTable("profiles", {
 });
 
 export const bookings = pgTable("bookings", {
-  id:        text("id").primaryKey(),
-  userEmail: text("user_email").notNull(),
-  status:    text("status").notNull(),
-  checkIn:   text("check_in").notNull(),
-  checkOut:  text("check_out").notNull(),
-  nights:    integer("nights").notNull(),
-  guests:    integer("guests").notNull().default(2),
-  total:     text("total").notNull(),
-  apartment: text("apartment").notNull(),
-  location:  text("location").notNull(),
-  image:     text("image").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  id:            text("id").primaryKey(),
+  userEmail:     text("user_email").notNull(),
+  status:        text("status").notNull(),
+  checkIn:       text("check_in").notNull(),
+  checkOut:      text("check_out").notNull(),
+  nights:        integer("nights").notNull(),
+  guests:        integer("guests").notNull().default(2),
+  total:         text("total").notNull(),
+  apartment:     text("apartment").notNull(),
+  location:      text("location").notNull(),
+  image:         text("image").notNull(),
+  entranceCode:  text("entrance_code").notNull().default(""),
+  hostNotes:     text("host_notes").notNull().default(""),
+  createdAt:     timestamp("created_at").defaultNow(),
+});
+
+export const propertySettings = pgTable("property_settings", {
+  id:           text("id").primaryKey(),
+  wifiSsid:     text("wifi_ssid").notNull().default(""),
+  wifiPassword: text("wifi_password").notNull().default(""),
 });
 
 export const messages = pgTable("messages", {

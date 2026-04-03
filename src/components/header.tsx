@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSession, AUTH_CHANGE_EVENT, type Session } from "@/components/SignIn";
+import { isAdminEmail } from "@/lib/admin";
 
 function HeaderAuth() {
   const [session, setSession] = useState<Session | null>(null);
@@ -18,11 +19,13 @@ function HeaderAuth() {
   }, []);
 
   if (session) {
+    const accountHref = isAdminEmail(session.email) ? "/admin" : "/profile";
+    const accountLabel = isAdminEmail(session.email) ? "Admin dashboard" : "My profile";
     return (
       <Link
-        href="/profile"
+        href={accountHref}
         className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white ring-2 ring-white hover:bg-neutral-700 transition"
-        aria-label="My profile"
+        aria-label={accountLabel}
         title={session.email}
       >
      

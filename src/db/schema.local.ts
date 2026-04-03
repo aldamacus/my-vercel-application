@@ -24,18 +24,26 @@ export const profilesInTest = test.table("profiles", {
 });
 
 export const bookingsInTest = test.table("bookings", {
-  id:        text().primaryKey().notNull(),
-  userEmail: text("user_email").notNull(),
-  status:    text().notNull(),
-  checkIn:   text("check_in").notNull(),
-  checkOut:  text("check_out").notNull(),
-  nights:    integer().notNull(),
-  guests:    integer().default(2).notNull(),
-  total:     text().notNull(),
-  apartment: text().notNull(),
-  location:  text().notNull(),
-  image:     text().notNull(),
-  createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
+  id:            text().primaryKey().notNull(),
+  userEmail:     text("user_email").notNull(),
+  status:        text().notNull(),
+  checkIn:       text("check_in").notNull(),
+  checkOut:      text("check_out").notNull(),
+  nights:        integer().notNull(),
+  guests:        integer().default(2).notNull(),
+  total:         text().notNull(),
+  apartment:     text().notNull(),
+  location:      text().notNull(),
+  image:         text().notNull(),
+  entranceCode:  text("entrance_code").default("").notNull(),
+  hostNotes:     text("host_notes").default("").notNull(),
+  createdAt:     timestamp("created_at", { mode: "string" }).defaultNow(),
+});
+
+export const propertySettingsInTest = test.table("property_settings", {
+  id:            text().primaryKey().notNull(),
+  wifiSsid:      text("wifi_ssid").default("").notNull(),
+  wifiPassword:  text("wifi_password").default("").notNull(),
 });
 
 export const messagesInTest = test.table("messages", {
@@ -47,4 +55,10 @@ export const messagesInTest = test.table("messages", {
 });
 
 // Aliases matching schema.ts export names — used by active-schema.ts
-export { usersInTest as users, profilesInTest as profiles, bookingsInTest as bookings, messagesInTest as messages };
+export {
+  usersInTest as users,
+  profilesInTest as profiles,
+  bookingsInTest as bookings,
+  messagesInTest as messages,
+  propertySettingsInTest as propertySettings,
+};

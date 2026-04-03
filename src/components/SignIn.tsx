@@ -13,8 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { registerAction, confirmAction, signInAction } from "@/app/actions/auth";
-
-const ADMIN_EMAIL = "central.brukenthal@gmail.com";
+import { ADMIN_EMAIL, isAdminEmail } from "@/lib/admin";
 
 function sendRegistrationEmails(userEmail: string, token: string) {
   const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
@@ -186,6 +185,11 @@ export default function SignIn() {
     saveSession({ email: result.email! });
     setSession({ email: result.email! });
     resetForm();
+
+    if (isAdminEmail(result.email)) {
+      router.push("/admin");
+      return;
+    }
 
     // If the user was redirected here after trying to reserve, send them back
     if (sessionStorage.getItem("pending_reserve_dates")) {

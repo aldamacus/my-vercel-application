@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { getProfileAction, saveProfileAction } from "@/app/actions/profile";
 import { getMessagesAction, addMessageAction, type MessageRow } from "@/app/actions/messages";
 import { getBookingsAction, type BookingRow } from "@/app/actions/bookings";
+import { getPropertyWifiForGuestAction } from "@/app/actions/property-settings";
 import {
   User,
   CalendarDays,
@@ -21,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { getSession, saveSession, AUTH_CHANGE_EVENT } from "@/components/SignIn";
+import { isAdminEmail } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -33,16 +35,6 @@ interface Profile {
   phone: string;
   email: string;
 }
-
-// Admin-set access codes for upcoming bookings
-const BOOKING_CODES: Record<string, { entranceCode: string; wifiName: string; wifiPassword: string; notes: string }> = {
-  "BK-2025-019": {
-    entranceCode: "4821",
-    wifiName: "CentralAmBrukenthal",
-    wifiPassword: "Sibiu2025!",
-    notes: "Enter through the main courtyard gate, apartment is on the 2nd floor, door on the left. Check-in from 15:00. Please leave the keys in the lockbox on check-out.",
-  },
-};
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -194,12 +186,38 @@ function CopyField({ label, value, icon }: { label: string; value: string; icon:
 // ---------------------------------------------------------------------------
 function BookingModal({
   booking,
+  guestEmail,
   onClose,
 }: {
   booking: BookingRow;
+  guestEmail: string;
   onClose: () => void;
 }) {
-  const codes = BOOKING_CODES[booking.id];
+  const [wifi, setWifi] = useState<{ wifiSsid: string; wifiPassword: string } | null>(null);
+  const [wifiLoading, setWifiLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setWifiLoading(true);
+    getPropertyWifiForGuestAction(guestEmail).then((w) => {
+      if (cancelled) return;
+      setWifi(w ?? { wifiSsid: "", wifiPassword: "" });
+      setWifiLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [guestEmail]);
+
+  const entrance = booking.entranceCode.trim();
+  const notes = booking.hostNotes.trim();
+  const wifiSsid = (wifi?.wifiSsid ?? "").trim();
+  const wifiPassword = (wifi?.wifiPassword ?? "").trim();
+  const hasAccessDetails =
+    Boolean(entrance) ||
+    Boolean(notes) ||
+    Boolean(wifiSsid) ||
+    Boolean(wifiPassword);
 
   // Close on Escape
   useEffect(() => {
@@ -258,19 +276,35 @@ function BookingModal({
             </div>
           </div>
 
-          {codes ? (
+          {wifiLoading ? (
+            <div className="flex items-center gap-2 py-4 text-sm text-neutral-400">
+              <Loader2 size={14} className="animate-spin" /> Loading access details…
+            </div>
+          ) : hasAccessDetails ? (
             <div className="flex flex-col gap-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-neutral-400">
                 Access details
               </p>
-              <CopyField label="Entrance code" value={codes.entranceCode} icon={<DoorOpen size={14} />} />
-              <CopyField label="Wi-Fi network" value={codes.wifiName} icon={<Wifi size={14} />} />
-              <CopyField label="Wi-Fi password" value={codes.wifiPassword} icon={<KeyRound size={14} />} />
-
-              <div className="mt-1 rounded-lg border border-dashed border-neutral-200 bg-neutral-50 px-3.5 py-3 text-xs leading-relaxed text-neutral-600">
-                <p className="mb-1 font-semibold text-neutral-700">Notes from host</p>
-                {codes.notes}
-              </div>
+              {entrance ? (
+                <CopyField label="Entrance code" value={entrance} icon={<DoorOpen size={14} />} />
+              ) : null}
+              {wifiSsid ? (
+                <CopyField label="Wi-Fi network" value={wifiSsid} icon={<Wifi size={14} />} />
+              ) : null}
+              {wifiPassword ? (
+                <CopyField label="Wi-Fi password" value={wifiPassword} icon={<KeyRound size={14} />} />
+              ) : null}
+              {!wifiSsid && !wifiPassword && (entrance || notes) ? (
+                <p className="text-xs text-neutral-500">
+                  Wi-Fi details will appear here once the host has added them.
+                </p>
+              ) : null}
+              {notes ? (
+                <div className="mt-1 rounded-lg border border-dashed border-neutral-200 bg-neutral-50 px-3.5 py-3 text-xs leading-relaxed text-neutral-600">
+                  <p className="mb-1 font-semibold text-neutral-700">Notes from host</p>
+                  {notes}
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="text-sm text-neutral-500">
@@ -437,6 +471,7 @@ function BookingsPanel({ email }: { email: string }) {
       {selectedBooking && (
         <BookingModal
           booking={selectedBooking}
+          guestEmail={email}
           onClose={() => setSelectedBooking(null)}
         />
       )}
@@ -560,12 +595,17 @@ export default function ProfilePage() {
       router.replace("/#sign-in");
       return;
     }
+    if (isAdminEmail(s.email)) {
+      router.replace("/admin");
+      return;
+    }
     setSession(s);
     setReady(true);
 
     const handler = () => {
       const updated = getSession();
       if (!updated) router.replace("/#sign-in");
+      else if (isAdminEmail(updated.email)) router.replace("/admin");
       else setSession(updated);
     };
     window.addEventListener(AUTH_CHANGE_EVENT, handler);

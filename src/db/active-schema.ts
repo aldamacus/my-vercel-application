@@ -12,7 +12,8 @@ import * as localSchema from "./schema.local";
 
 const local = process.env.DB_SCHEMA === "test";
 
-export const users    = local ? localSchema.users    : publicSchema.users;
-export const profiles = local ? localSchema.profiles : publicSchema.profiles;
-export const bookings = local ? localSchema.bookings : publicSchema.bookings;
-export const messages = local ? localSchema.messages : publicSchema.messages;
+export const users            = local ? localSchema.users            : publicSchema.users;
+export const profiles         = local ? localSchema.profiles         : publicSchema.profiles;
+export const bookings         = local ? localSchema.bookings         : publicSchema.bookings;
+export const messages         = local ? localSchema.messages         : publicSchema.messages;
+export const propertySettings = local ? localSchema.propertySettings : publicSchema.propertySettings;
