@@ -1,7 +1,7 @@
 "use server";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { users } from "@/db/active-schema";
+import { users, profiles } from "@/db/active-schema";
 
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -20,7 +20,9 @@ function randomToken(): string {
 
 export async function registerAction(
   email: string,
-  password: string
+  password: string,
+  firstName: string = "",
+  lastName: string = ""
 ): Promise<{ ok: boolean; token?: string; error?: string }> {
   const db = getDb();
   const trimmed = email.trim().toLowerCase();
@@ -47,6 +49,15 @@ export async function registerAction(
     confirmed: false,
     confirmToken: token,
   });
+
+  // Seed an empty profile row with the name provided at registration
+  await db
+    .insert(profiles)
+    .values({ email: trimmed, firstName: firstName.trim(), lastName: lastName.trim(), phone: "" })
+    .onConflictDoUpdate({
+      target: profiles.email,
+      set: { firstName: firstName.trim(), lastName: lastName.trim() },
+    });
 
   return { ok: true, token };
 }

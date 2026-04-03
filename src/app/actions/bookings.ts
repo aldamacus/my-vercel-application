@@ -5,7 +5,7 @@ import { bookings } from "@/db/active-schema";
 
 export interface BookingRow {
   id: string;
-  status: "upcoming" | "completed";
+  status: string;
   checkIn: string;
   checkOut: string;
   nights: number;
@@ -16,54 +16,18 @@ export interface BookingRow {
   image: string;
 }
 
-const SEED_BOOKINGS = [
-  {
-    status: "completed" as const,
-    checkIn: "15 Dec 2024",
-    checkOut: "20 Dec 2024",
-    nights: 5,
-    guests: 2,
-    total: "€ 420",
-    apartment: "Central am Brukenthal",
-    location: "Sibiu, Romania",
-    image: "/163426986.jpg",
-  },
-  {
-    status: "upcoming" as const,
-    checkIn: "10 Jun 2025",
-    checkOut: "15 Jun 2025",
-    nights: 5,
-    guests: 2,
-    total: "€ 450",
-    apartment: "Central am Brukenthal",
-    location: "Sibiu, Romania",
-    image: "/163426986.jpg",
-  },
-];
-
 export async function getBookingsAction(email: string): Promise<BookingRow[]> {
   const db = getDb();
 
-  let rows = await db
+  const rows = await db
     .select()
     .from(bookings)
     .where(eq(bookings.userEmail, email))
     .orderBy(asc(bookings.createdAt));
 
-  if (rows.length === 0) {
-    await db.insert(bookings).values(
-      SEED_BOOKINGS.map((b) => ({ ...b, id: crypto.randomUUID(), userEmail: email }))
-    );
-    rows = await db
-      .select()
-      .from(bookings)
-      .where(eq(bookings.userEmail, email))
-      .orderBy(asc(bookings.createdAt));
-  }
-
   return rows.map((r) => ({
     id: r.id,
-    status: r.status as "upcoming" | "completed",
+    status: r.status,
     checkIn: r.checkIn,
     checkOut: r.checkOut,
     nights: r.nights,
@@ -73,4 +37,35 @@ export async function getBookingsAction(email: string): Promise<BookingRow[]> {
     location: r.location,
     image: r.image,
   }));
+}
+
+export async function createBookingAction(
+  userEmail: string,
+  data: {
+    checkIn: string;
+    checkOut: string;
+    nights: number;
+    total: string;
+  }
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const db = getDb();
+  const id = crypto.randomUUID();
+  try {
+    await db.insert(bookings).values({
+      id,
+      userEmail,
+      status: "new",
+      checkIn: data.checkIn,
+      checkOut: data.checkOut,
+      nights: data.nights,
+      guests: 2,
+      total: data.total,
+      apartment: "Central am Brukenthal",
+      location: "Sibiu, Romania",
+      image: "/163426986.jpg",
+    });
+    return { ok: true, id };
+  } catch {
+    return { ok: false, error: "Could not save booking." };
+  }
 }

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import emailjs from "@emailjs/browser";
 import {
   Eye,
   EyeOff,
@@ -11,6 +13,31 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { registerAction, confirmAction, signInAction } from "@/app/actions/auth";
+
+const ADMIN_EMAIL = "central.brukenthal@gmail.com";
+
+function sendRegistrationEmails(userEmail: string, token: string) {
+  const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
+  const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
+  const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
+  const confirmUrl = `${window.location.origin}/?confirm=${token}`;
+
+  // Notify admin
+  emailjs.send(serviceId, templateId, {
+    to_email: ADMIN_EMAIL,
+    name: "New registration",
+    email: userEmail,
+    message: `A new user has registered: ${userEmail}\n\nConfirmation link:\n${confirmUrl}`,
+  }, publicKey).catch(() => {/* best-effort */});
+
+  // Send confirmation link to the user
+  emailjs.send(serviceId, templateId, {
+    to_email: userEmail,
+    name: "Guest",
+    email: userEmail,
+    message: `Welcome! Please confirm your email address by clicking the link below:\n\n${confirmUrl}\n\nIf you did not create an account, you can safely ignore this email.`,
+  }, publicKey).catch(() => {/* best-effort */});
+}
 
 // ---------------------------------------------------------------------------
 // Session helpers (client-side only — stores email after server validates creds)
@@ -57,15 +84,18 @@ const btnPrimary =
 type View = "signin" | "register" | "pending_confirmation" | "confirmed";
 
 export default function SignIn() {
+  const router = useRouter();
   const [view, setView] = useState<View>("signin");
   const [session, setSession] = useState<Session | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
-  const [pendingToken, setPendingToken] = useState("");
+
   const [pendingEmail, setPendingEmail] = useState("");
 
   useEffect(() => {
@@ -75,9 +105,31 @@ export default function SignIn() {
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, []);
 
+  // Auto-confirm when the user clicks the link in their email (?confirm=TOKEN)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("confirm");
+    if (!token) return;
+
+    // Clean the param from the URL without a page reload
+    const clean = new URL(window.location.href);
+    clean.searchParams.delete("confirm");
+    window.history.replaceState({}, "", clean.toString());
+
+    confirmAction(token).then((result) => {
+      if (result.ok) {
+        setView("confirmed");
+      } else {
+        setError(result.error ?? "Confirmation link is invalid or already used.");
+      }
+    });
+  }, []);
+
   function resetForm() {
     setEmail("");
     setPassword("");
+    setFirstName("");
+    setLastName("");
     setShowPw(false);
     setError("");
   }
@@ -93,7 +145,12 @@ export default function SignIn() {
     setError("");
     setSubmitting(true);
 
-    const result = await registerAction(email.trim().toLowerCase(), password);
+    const result = await registerAction(
+      email.trim().toLowerCase(),
+      password,
+      firstName.trim(),
+      lastName.trim()
+    );
     setSubmitting(false);
 
     if (!result.ok) {
@@ -101,27 +158,16 @@ export default function SignIn() {
       return;
     }
 
-    setPendingToken(result.token!);
-    setPendingEmail(email.trim().toLowerCase());
+    const confirmedEmail = email.trim().toLowerCase();
+    const token = result.token!;
+    
+    setPendingEmail(confirmedEmail);
+    sendRegistrationEmails(confirmedEmail, token);
     resetForm();
     setView("pending_confirmation");
   }
 
-  // ---- Confirm email (DB) ----
-  async function handleConfirm() {
-    setError("");
-    setSubmitting(true);
 
-    const result = await confirmAction(pendingToken);
-    setSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error!);
-      return;
-    }
-
-    setView("confirmed");
-  }
 
   // ---- Sign In (DB) ----
   async function handleSignIn(e: React.FormEvent) {
@@ -140,6 +186,11 @@ export default function SignIn() {
     saveSession({ email: result.email! });
     setSession({ email: result.email! });
     resetForm();
+
+    // If the user was redirected here after trying to reserve, send them back
+    if (sessionStorage.getItem("pending_reserve_dates")) {
+      router.push("/book-your-stay");
+    }
   }
 
   // ---- Sign Out ----
@@ -265,6 +316,40 @@ export default function SignIn() {
         {/* ---- Register ---- */}
         {view === "register" && (
           <form onSubmit={handleRegister} className="flex flex-col gap-3">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="mb-1 block text-xs font-medium text-neutral-600" htmlFor="reg-first">
+                  First name
+                </label>
+                <input
+                  id="reg-first"
+                  type="text"
+                  autoComplete="given-name"
+                  required
+                  disabled={submitting}
+                  placeholder="Jane"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-1 block text-xs font-medium text-neutral-600" htmlFor="reg-last">
+                  Last name
+                </label>
+                <input
+                  id="reg-last"
+                  type="text"
+                  autoComplete="family-name"
+                  required
+                  disabled={submitting}
+                  placeholder="Doe"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={inputCls}
+                />
+              </div>
+            </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-neutral-600" htmlFor="reg-email">
                 Email
@@ -326,23 +411,14 @@ export default function SignIn() {
               <MailCheck size={22} className="text-neutral-700" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-neutral-900">Check your inbox</p>
+              <p className="text-sm font-semibold text-neutral-900">Thank you for registering!</p>
               <p className="mt-1 text-xs text-neutral-500">
-                A confirmation link was sent to{" "}
+                The <span className="font-medium text-neutral-700">Central am Brukenthal</span> team
+                will send a confirmation link to{" "}
                 <span className="font-medium text-neutral-700">{pendingEmail}</span>.
-                Click below to activate your account.
+                Please check your email to activate your account.
               </p>
             </div>
-            <button
-              onClick={handleConfirm}
-              disabled={submitting}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-50 px-4 py-3 text-sm font-medium text-neutral-700 transition hover:border-neutral-400 hover:bg-white disabled:opacity-50"
-            >
-              {submitting
-                ? <Loader2 size={14} className="animate-spin" />
-                : <MailCheck size={14} />}
-              Confirm my email address →
-            </button>
             {error && <p className="text-xs text-red-500">{error}</p>}
             <button
               onClick={() => switchView("signin")}

@@ -298,6 +298,7 @@ function BookingCard({
   onClick?: () => void;
 }) {
   const upcoming = booking.status === "upcoming";
+  const isNew = booking.status === "new";
   const Wrapper = upcoming ? "button" : "div";
   return (
     <Wrapper
@@ -324,13 +325,20 @@ function BookingCard({
               <span
                 className={cn(
                   "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                  upcoming ? "bg-blue-50 text-blue-700" : "bg-neutral-100 text-neutral-500"
+                  upcoming
+                    ? "bg-blue-50 text-blue-700"
+                    : isNew
+                    ? "bg-amber-50 text-amber-700"
+                    : "bg-neutral-100 text-neutral-500"
                 )}
               >
-                {upcoming ? "Upcoming" : "Completed"}
+                {upcoming ? "Upcoming" : isNew ? "Pending review" : "Completed"}
               </span>
               {upcoming && (
                 <span className="text-[10px] text-neutral-400">Tap to view access details</span>
+              )}
+              {isNew && (
+                <span className="text-[10px] text-neutral-400">Awaiting admin confirmation</span>
               )}
             </div>
           </div>
@@ -374,6 +382,7 @@ function BookingsPanel({ email }: { email: string }) {
     });
   }, [email]);
 
+  const pendingNew = allBookings.filter((b) => b.status === "new");
   const upcoming = allBookings.filter((b) => b.status === "upcoming");
   const completed = allBookings.filter((b) => b.status === "completed");
 
@@ -385,8 +394,21 @@ function BookingsPanel({ email }: { email: string }) {
         <div className="flex items-center gap-2 text-sm text-neutral-400">
           <Loader2 size={14} className="animate-spin" /> Loading bookings…
         </div>
+      ) : allBookings.length === 0 ? (
+        <p className="text-sm text-neutral-400">No bookings yet. Reserve your stay to get started.</p>
       ) : (
         <div className="flex flex-col gap-4">
+          {pendingNew.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                <Clock size={14} className="text-amber-500" />
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Pending review</span>
+              </div>
+              {pendingNew.map((b) => (
+                <BookingCard key={b.id} booking={b} />
+              ))}
+            </>
+          )}
           {upcoming.length > 0 && (
             <>
               <div className="flex items-center gap-2">

@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import React, { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import ContactForm from "@/components/ui/ContactForm";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
+import { getSession } from "@/components/SignIn";
+import { getProfileAction } from "@/app/actions/profile";
 import {
   parseDateInputLocal,
   validateStayRange,
@@ -28,6 +30,7 @@ import StayCalendar from "./Calendar";
 function BookYourStayClient() {
   const searchParams = useSearchParams();
   const appliedFromQuery = useRef(false);
+  const router = useRouter();
 
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { bookedDates, loading: calendarLoading, error: calendarError, refetch } =
@@ -35,6 +38,34 @@ function BookYourStayClient() {
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [userFullName, setUserFullName] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const session = getSession();
+    if (!session) return;
+
+    getProfileAction(session.email).then((profile) => {
+      if (profile) {
+        const full = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
+        if (full) setUserFullName(full);
+      }
+
+      // Restore dates that were saved before the sign-in redirect
+      const raw = sessionStorage.getItem("pending_reserve_dates");
+      if (!raw) return;
+      sessionStorage.removeItem("pending_reserve_dates");
+      try {
+        const timestamps = JSON.parse(raw) as number[];
+        const dates = timestamps.map((t) => new Date(t));
+        if (dates.length >= 2) {
+          setUserSelectedDates(dates);
+          setShowReserveModal(true);
+        }
+      } catch {
+        // ignore malformed data
+      }
+    });
+  }, []);
 
   // Array for user-selected dates (not Airbnb booked dates)
   const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
@@ -300,19 +331,9 @@ function BookYourStayClient() {
                   })}`;
                 })()}
               </div>
-              {/* Price Details */}
-              <div className="mb-2 mt-4">
-                <div className="font-semibold text-base mb-1">
-                  Price Details
-                </div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>€30 x {userSelectedDates.length} nights</span>
-                  <span>€{userSelectedDates.length * 30}</span>
-                </div>
-                <div className="flex justify-between text-base font-bold border-t pt-2 mt-2">
-                  <span>Total</span>
-                  <span>€{userSelectedDates.length * 30}</span>
-                </div>
+              {/* Pricing note */}
+              <div className="mb-2 mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
+                The Central am Brukenthal team will provide the full pricing details in your booking confirmation.
               </div>
             </>
           )}
@@ -366,9 +387,19 @@ function BookYourStayClient() {
                 ? "cursor-not-allowed opacity-50"
                 : ""
             }`}
-            onClick={() =>
-              userSelectedDates.length >= 2 && setShowReserveModal(true)
-            }
+            onClick={() => {
+              if (userSelectedDates.length < 2) return;
+              const session = getSession();
+              if (!session) {
+                sessionStorage.setItem(
+                  "pending_reserve_dates",
+                  JSON.stringify(userSelectedDates.map((d) => d.getTime()))
+                );
+                router.push("/#sign-in");
+                return;
+              }
+              setShowReserveModal(true);
+            }}
             disabled={userSelectedDates.length < 2}
           >
             Reserve your stay
@@ -406,6 +437,8 @@ function BookYourStayClient() {
               key={userSelectedDates.map((d) => d.getTime()).join(",")}
               selectedDates={userSelectedDates}
               onClosed={() => setShowReserveModal(false)}
+              userEmail={getSession()?.email}
+              userName={userFullName}
             />
           </div>
         </div>

@@ -324,15 +324,14 @@ export default function Home() {
 
           <aside className="lg:pt-2">
             <div className="sticky top-24 rounded-xl border border-neutral-200 bg-white p-6 shadow-md lg:top-28">
-              <div className="flex flex-wrap items-baseline gap-1">
-                <span className="text-2xl font-semibold text-neutral-900">
-                  €30
-                </span>
-                <span className="text-neutral-600">night</span>
-              </div>
+              <p className="text-base font-semibold text-neutral-900">
+                Ask for an offer
+              </p>
               <p className="mt-2 text-sm text-neutral-600">
-                Minimum 2 nights. We&apos;ll check live calendar before you
-                continue.
+                Send us your dates and we&apos;ll get back to you with a personalised offer.
+              </p>
+              <p className="mt-2 text-sm text-neutral-600">
+                Next available dates are:
               </p>
               <form
                 onSubmit={handleCheckAvailability}
@@ -395,7 +394,7 @@ export default function Home() {
                 </button>
               </form>
               <p className="mt-4 text-center text-xs text-neutral-500">
-                You won&apos;t be charged yet
+                No payment required — we&apos;ll reply with your personalised offer.
               </p>
             </div>
           </aside>
