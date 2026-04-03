@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
+import { createBookingAction } from "@/app/actions/bookings";
 
 const emailJsPublicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
 if (emailJsPublicKey) {
@@ -16,12 +17,13 @@ export const RESERVATION_DEFAULT_MESSAGE =
 export type ReserveStayFormProps = {
   selectedDates: Date[];
   onClosed?: () => void;
+  userEmail?: string;
+  userName?: string;
 };
 
 function formatStayRange(dates: Date[]): {
   rangeLabel: string;
   nights: number;
-  totalEur: number;
   perNightList: string;
 } {
   const sorted = [...dates].sort((a, b) => a.getTime() - b.getTime());
@@ -39,7 +41,6 @@ function formatStayRange(dates: Date[]): {
   return {
     rangeLabel,
     nights,
-    totalEur: nights * 30,
     perNightList,
   };
 }
@@ -47,30 +48,37 @@ function formatStayRange(dates: Date[]): {
 export default function ReserveStayForm({
   selectedDates,
   onClosed,
+  userEmail,
+  userName,
 }: ReserveStayFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<null | "success" | "error">(null);
   const [message, setMessage] = useState(RESERVATION_DEFAULT_MESSAGE);
 
-  const { rangeLabel, nights, totalEur, perNightList } =
+  const { rangeLabel, nights, perNightList } =
     formatStayRange(selectedDates);
 
-  const sendReservation = (e: React.FormEvent<HTMLFormElement>) => {
+  const sendReservation = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formRef.current) return;
     const form = formRef.current;
     const fd = new FormData(form);
-    const name = String(fd.get("name") ?? "").trim();
-    const email = String(fd.get("email") ?? "").trim();
+    const name = userName ?? String(fd.get("name") ?? "").trim();
+    const email = userEmail ?? String(fd.get("email") ?? "").trim();
     const address = String(fd.get("address") ?? "").trim();
     const userMessage = message.trim();
+
+    const sorted = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+    const fmt = (d: Date) =>
+      d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    const checkIn = fmt(sorted[0]);
+    const checkOut = fmt(sorted[sorted.length - 1]);
 
     const composedBody = [
       "--- Reservation request — Central am Brukenthal ---",
       `Stay (first night → last night): ${rangeLabel}`,
       `Nights: ${nights}`,
-      `Indicative total: €${totalEur} (€30 × ${nights} nights)`,
       "",
       "Nights requested:",
       perNightList,
@@ -82,32 +90,42 @@ export default function ReserveStayForm({
     ].join("\n");
 
     setSending(true);
-    emailjs
-      .send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        {
-          to_email: CONTACT_INBOX_EMAIL,
-          name,
-          email,
-          address,
-          message: composedBody,
-          booking_dates: rangeLabel,
-          nights: String(nights),
-          total_eur: String(totalEur),
-          subject: `Reservation request — ${nights} night(s) — ${rangeLabel}`,
-        }
-      )
-      .then(() => {
-        setSending(false);
-        form.reset();
-        setMessage(RESERVATION_DEFAULT_MESSAGE);
-        setFeedback("success");
-      })
-      .catch(() => {
-        setSending(false);
-        setFeedback("error");
-      });
+
+    const [dbResult] = await Promise.all([
+      userEmail
+        ? createBookingAction(userEmail, {
+            checkIn,
+            checkOut,
+            nights,
+            total: "TBD",
+          })
+        : Promise.resolve({ ok: true }),
+      emailjs
+        .send(
+          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+          {
+            to_email: CONTACT_INBOX_EMAIL,
+            name,
+            email,
+            address,
+            message: composedBody,
+            booking_dates: rangeLabel,
+            nights: String(nights),
+            subject: `Reservation request — ${nights} night(s) — ${rangeLabel}`,
+          }
+        )
+        .catch(() => null),
+    ]);
+
+    setSending(false);
+    if (!dbResult.ok) {
+      setFeedback("error");
+      return;
+    }
+    form.reset();
+    setMessage(RESERVATION_DEFAULT_MESSAGE);
+    setFeedback("success");
   };
 
   const handleDismissFeedback = () => {
@@ -139,8 +157,7 @@ export default function ReserveStayForm({
             <p className="font-semibold text-neutral-900">Your selected stay</p>
             <p className="mt-2 text-base font-medium">{rangeLabel}</p>
             <p className="mt-1 text-neutral-600">
-              {nights} night{nights !== 1 ? "s" : ""} · €{totalEur} total
-              (€30/night)
+              {nights} night{nights !== 1 ? "s" : ""} · pricing provided by the admin
             </p>
             <ul className="mt-2 list-inside list-disc text-xs text-neutral-600">
               {selectedDates
@@ -167,7 +184,13 @@ export default function ReserveStayForm({
               required
               maxLength={100}
               autoComplete="name"
-              className="mt-1 block w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              defaultValue={userName ?? ""}
+              readOnly={!!userName}
+              className={`mt-1 block w-full rounded-lg border px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                userName
+                  ? "border-neutral-200 bg-neutral-100 text-neutral-500 cursor-default"
+                  : "border-neutral-300 bg-white focus:border-neutral-500"
+              }`}
             />
           </label>
           <label className="mb-1 block text-sm font-medium text-neutral-900">
@@ -178,7 +201,13 @@ export default function ReserveStayForm({
               required
               maxLength={100}
               autoComplete="email"
-              className="mt-1 block w-full rounded-lg border border-neutral-300 bg-white px-4 py-2 text-base focus:border-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              defaultValue={userEmail ?? ""}
+              readOnly={!!userEmail}
+              className={`mt-1 block w-full rounded-lg border px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-primary/30 ${
+                userEmail
+                  ? "border-neutral-200 bg-neutral-100 text-neutral-500 cursor-default"
+                  : "border-neutral-300 bg-white focus:border-neutral-500"
+              }`}
             />
           </label>
           <label className="mb-1 block text-sm font-medium text-neutral-900">

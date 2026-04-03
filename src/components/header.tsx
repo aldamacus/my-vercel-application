@@ -3,7 +3,49 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getSession, AUTH_CHANGE_EVENT, type Session } from "@/components/SignIn";
+import { isAdminEmail } from "@/lib/admin";
+
+function HeaderAuth() {
+  const [session, setSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    setSession(getSession());
+    const handler = () => setSession(getSession());
+    window.addEventListener(AUTH_CHANGE_EVENT, handler);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
+  }, []);
+
+  if (session) {
+    const accountHref = isAdminEmail(session.email) ? "/admin" : "/profile";
+    const accountLabel = isAdminEmail(session.email) ? "Admin dashboard" : "My profile";
+    return (
+      <Link
+        href={accountHref}
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white ring-2 ring-white hover:bg-neutral-700 transition"
+        aria-label={accountLabel}
+        title={session.email}
+      >
+     
+        {session.email[0].toUpperCase()}
+      
+      </Link>
+     
+    );
+  }
+
+  return (
+    <Link
+      href="/#sign-in"
+      className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-white hover:text-neutral-900"
+    >
+      <LogIn size={14} aria-hidden />
+      Sign in
+    </Link>
+  );
+}
 
 export default function Header() {
   const pathname = usePathname();
@@ -80,6 +122,32 @@ export default function Header() {
         </nav>
 
         <div className="flex flex-shrink-0 items-center gap-2 md:gap-3">
+          <div className="relative group flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width={18}
+              height={18}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mr-1 text-neutral-400"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
+            </svg>
+            <HeaderAuth />
+            <span
+              className="absolute top-full left-1/2 mt-2 -translate-x-1/2 whitespace-nowrap rounded bg-neutral-900 px-2 py-0.5 text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+              style={{ zIndex: 10 }}
+              role="tooltip"
+            >
+              Profile
+            </span>
+          </div>
           <a
             href="https://www.booking.com/Share-HyJ79e"
             target="_blank"

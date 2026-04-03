@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import SignIn from "@/components/SignIn";
 import { addDays } from "date-fns";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
@@ -323,15 +324,14 @@ export default function Home() {
 
           <aside className="lg:pt-2">
             <div className="sticky top-24 rounded-xl border border-neutral-200 bg-white p-6 shadow-md lg:top-28">
-              <div className="flex flex-wrap items-baseline gap-1">
-                <span className="text-2xl font-semibold text-neutral-900">
-                  €30
-                </span>
-                <span className="text-neutral-600">night</span>
-              </div>
+              <p className="text-base font-semibold text-neutral-900">
+                Ask for an offer
+              </p>
               <p className="mt-2 text-sm text-neutral-600">
-                Minimum 2 nights. We&apos;ll check live calendar before you
-                continue.
+                Send us your dates and we&apos;ll get back to you with a personalised offer.
+              </p>
+              <p className="mt-2 text-sm text-neutral-600">
+                Next available dates are:
               </p>
               <form
                 onSubmit={handleCheckAvailability}
@@ -394,7 +394,7 @@ export default function Home() {
                 </button>
               </form>
               <p className="mt-4 text-center text-xs text-neutral-500">
-                You won&apos;t be charged yet
+                No payment required — we&apos;ll reply with your personalised offer.
               </p>
             </div>
           </aside>
@@ -442,6 +442,20 @@ export default function Home() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* Sign-in — full-viewport centred section */}
+      <section
+        id="sign-in"
+        className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 bg-neutral-50 px-4 py-16"
+      >
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-neutral-900">Your account</h2>
+          <p className="mt-1 text-sm text-neutral-500">
+            Sign in or create an account to manage your bookings.
+          </p>
+        </div>
+        <SignIn />
       </section>
     </main>
   );
