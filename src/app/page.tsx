@@ -2,7 +2,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import SignIn from "@/components/SignIn";
+import SignIn, {
+  getSession,
+  AUTH_CHANGE_EVENT,
+  type Session,
+} from "@/components/SignIn";
+import { Amenities } from "@/components/Amenities";
+import { Button } from "@/components/ui/button";
 import { addDays } from "date-fns";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
@@ -27,6 +33,7 @@ export default function Home() {
     useMergedIcalAvailability(null);
 
   const [expanded, setExpanded] = useState(false);
+  const [aboutMoreOpen, setAboutMoreOpen] = useState(false);
   const [expandedPhoto, setExpandedPhoto] = useState<string | null>(null);
   const [checkInStr, setCheckInStr] = useState("");
   const [checkOutStr, setCheckOutStr] = useState("");
@@ -34,6 +41,14 @@ export default function Home() {
     null
   );
   const datesPrefilledRef = useRef(false);
+  const [authSession, setAuthSession] = useState<Session | null>(null);
+
+  useEffect(() => {
+    setAuthSession(getSession());
+    const handler = () => setAuthSession(getSession());
+    window.addEventListener(AUTH_CHANGE_EVENT, handler);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
+  }, []);
 
   const todayStr = useMemo(() => toISODateLocal(new Date()), []);
   const minCheckOutStr = useMemo(() => {
@@ -67,6 +82,20 @@ export default function Home() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [expandedPhoto]);
+
+  useEffect(() => {
+    if (!aboutMoreOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAboutMoreOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [aboutMoreOpen]);
 
   function handleCheckAvailability(e: React.FormEvent) {
     e.preventDefault();
@@ -219,7 +248,7 @@ export default function Home() {
         <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_min(360px,100%)] lg:gap-14">
           <div className="min-w-0">
             <h2 className="text-xl font-semibold text-neutral-900 md:text-2xl">
-              A home in the heart of the city
+            Entire rental unit in the heart of the city
             </h2>
             <div className="relative mt-4">
               <p
@@ -240,32 +269,10 @@ export default function Home() {
                 retreat, maintaining a perfect temperature that ensures a
                 comfortable night&apos;s sleep, even on the warmest of evenings.
                 <br />
-                <br />
-                Imagine unwinding on your private terrace, sipping a cool drink
-                while soaking in the lively ambiance of the bustling streets
-                below. With fast and free WiFi, you can easily share your
-                delightful experiences with friends and family or catch up on
-                your favorite shows on the flat-screen TV after a day of
-                exploration.
-                <br />
-                <br />
-                Our beautifully renovated space boasts a warm and cozy bedroom
-                that invites rest, alongside a modern bathroom stocked with
-                complimentary toiletries and a hairdryer. The fully equipped
-                kitchen is perfect for whipping up a casual meal to enjoy at your
-                own pace.
               </p>
-              {!expanded && (
-                <div className="pointer-events-none absolute bottom-0 left-0 h-16 w-full bg-gradient-to-t from-white to-transparent" />
-              )}
-              <button
-                type="button"
-                className="mt-3 text-sm font-semibold text-neutral-900 underline underline-offset-2 hover:text-brand"
-                onClick={() => setExpanded((v) => !v)}
-              >
-                {expanded ? "Show less" : "Show more"}
-              </button>
             </div>
+
+            <Amenities />
 
             <h3 className="mt-12 text-xl font-semibold text-neutral-900 md:text-2xl">
               About this property
@@ -300,25 +307,14 @@ export default function Home() {
                   </li>
                 </ul>
               </div>
-              <div>
-                <h4 className="text-base font-semibold text-neutral-900">
-                  Convenient location
-                </h4>
-                <ul className="mt-2 list-disc space-y-1 pl-6">
-                  <li>
-                    Located in the heart of Sibiu&apos;s Old Town, the apartment
-                    is within walking distance of major attractions like Piata
-                    Mare and the Brukenthal Palace.
-                  </li>
-                  <li>
-                    Located 2.5 mi from Sibiu International Airport, the apartment
-                    is near attractions such as The Stairs Passage (a few steps),
-                    The Council Tower of Sibiu (3-minute walk), and Piata Mare
-                    Sibiu (656 feet). Highly rated for its central location and
-                    room cleanliness.
-                  </li>
-                </ul>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-2 rounded-lg border-neutral-900 bg-white text-neutral-900 hover:bg-neutral-50"
+                onClick={() => setAboutMoreOpen(true)}
+              >
+                Show more
+              </Button>
             </div>
           </div>
 
@@ -442,21 +438,153 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {aboutMoreOpen && (
+          <div
+            className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+            role="presentation"
+            onClick={() => setAboutMoreOpen(false)}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="about-more-title"
+              className="flex max-h-[min(90vh,40rem)] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-neutral-200 px-5 py-4">
+                <h2
+                  id="about-more-title"
+                  className="text-lg font-semibold text-neutral-900 md:text-xl"
+                >
+                  About this property
+                </h2>
+                <button
+                  type="button"
+                  className="rounded-full p-2 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                  onClick={() => setAboutMoreOpen(false)}
+                  aria-label="Close"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="h-5 w-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div className="overflow-y-auto px-5 py-4 text-base leading-relaxed text-neutral-600 md:text-lg">
+                <div>
+                  <h3 className="text-base font-semibold text-neutral-900">
+                    Convenient location
+                  </h3>
+                  <ul className="mt-2 list-disc space-y-2 pl-6">
+                    <li>
+                      Located in the heart of Sibiu&apos;s Old Town, the apartment
+                      is within walking distance of major attractions like Piata
+                      Mare and the Brukenthal Palace.
+                    </li>
+                    <li>
+                      Located 2.5 mi from Sibiu International Airport, the apartment
+                      is near attractions such as The Stairs Passage (a few steps),
+                      The Council Tower of Sibiu (3-minute walk), and Piata Mare
+                      Sibiu (656 feet). Highly rated for its central location and
+                      room cleanliness.
+                    </li>
+                  </ul>
+                </div>
+
+                <h3 className="mt-8 text-base font-semibold text-neutral-900">
+                  About this space
+                </h3>
+                <p className="mt-2">
+                  Located in the Sibiu Old Town district in Sibiu, Central am
+                  Brukenthal provides an equipped accommodation with a terrace and
+                  free WiFi. Guests staying at this apartment have access to a fully
+                  equipped kitchen and a patio.
+                </p>
+                <p className="mt-4">
+                  The apartment has 1 bedroom and 1 bathroom with free toiletries
+                  and a hairdryer. A flat-screen TV with cable channels is
+                  available.
+                </p>
+                <p className="mt-4">
+                  We can accommodate 2 adults. We have a sofa which is situated in the same room with the bed.
+                </p>
+
+                <h3 className="mt-8 text-base font-semibold text-neutral-900">
+                  The space
+                </h3>
+                <p className="mt-2">
+                  The apartment in newly refurbished having all the kitchen
+                  appliances which a person need in order to cook a meal.
+                </p>
+                <p className="mt-4">
+                  Additionally, being in the city center is an advantage and all
+                  our guests are close to all the attractions which Sibiu offers.
+                  Even if it&apos;s situated in the City Center, the apartment is in
+                  a quiet place having an inner courtyard.
+                </p>
+                <p className="mt-4">
+                  This apartment was renovated with our best thoughts and we really
+                  hope that you feel like home.
+                </p>
+
+                <h3 className="mt-8 text-base font-semibold text-neutral-900">
+                  Guest access
+                </h3>
+                <p className="mt-2">
+                  We want that our guests feel like home and they have access to all
+                  the rooms of the apartment.
+                </p>
+
+                <h3 className="mt-8 text-base font-semibold text-neutral-900">
+                  Other things to note
+                </h3>
+                <p className="mt-2">
+                  The access in the apartment will be made with a Code lock. There is
+                  no physical key available. The access code for the door will be
+                  delivered via e-mail or phone message in the day of check-in.
+                </p>
+
+                <h3 className="mt-8 text-base font-semibold text-neutral-900">
+                  How to find us
+                </h3>
+                <p className="mt-2">
+                  The apartment is situated in the Movert House (Samuel von
+                  Brukenthal No. 1) opposite to the city Town Hall. The access to
+                  the apartment is via an inner courtyard. After you pass the big
+                  green gate, you walk 20 meters and on the ground floor on the right
+                  side, you can see Apartment 6.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
-      {/* Sign-in — full-viewport centred section */}
-      <section
-        id="sign-in"
-        className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 bg-neutral-50 px-4 py-16"
-      >
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-neutral-900">Your account</h2>
-          <p className="mt-1 text-sm text-neutral-500">
-            Sign in or create an account to manage your bookings.
-          </p>
-        </div>
-        <SignIn />
-      </section>
+      {!authSession && (
+        <section
+          id="sign-in"
+          className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-6 bg-neutral-50 px-4 py-16"
+        >
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-neutral-900">Your account</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              Sign in or create an account to manage your bookings.
+            </p>
+          </div>
+          <SignIn />
+        </section>
+      )}
     </main>
   );
 }

@@ -38,7 +38,7 @@ function HeaderAuth() {
 
   return (
     <Link
-      href="/#sign-in"
+      href="/sign-in"
       className="flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-700 transition hover:border-neutral-300 hover:bg-white hover:text-neutral-900"
     >
       <LogIn size={14} aria-hidden />
