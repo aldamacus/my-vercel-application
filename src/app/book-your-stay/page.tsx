@@ -2,8 +2,21 @@
 
 import Image from "next/image";
 import React, { Suspense, useEffect, useRef, useState } from "react";
+import {
+  Award,
+  Ban,
+  Bath,
+  Flame,
+  Home,
+  KeyRound,
+  MapPin,
+  Ruler,
+  Utensils,
+  Wifi,
+} from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ContactForm from "@/components/ui/ContactForm";
+import { Amenities, type AmenityCategory } from "@/components/Amenities";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
 import { getSession } from "@/components/SignIn";
 import { getProfileAction } from "@/app/actions/profile";
@@ -26,6 +39,46 @@ import StayCalendar from "./Calendar";
 
 // Define Value type locally based on react-calendar's types
 // Value = Date | [Date, Date] | null
+
+const BOOKING_AMENITY_CATEGORIES: AmenityCategory[] = [
+  {
+    title: "Booking page highlights",
+    items: [
+      { label: "Entire place is yours", icon: Home },
+      { label: "40 m2 of space", icon: Ruler },
+      { label: "Kitchen", icon: Utensils },
+      { label: "Free Wi-Fi", icon: Wifi },
+      { label: "Private bathroom", icon: Bath },
+      { label: "Self check-in", icon: KeyRound },
+      { label: "Non-smoking rooms", icon: Ban },
+      { label: "Heating", icon: Flame },
+    ],
+  },
+];
+
+const BOOKING_PREVIEW_LABELS = BOOKING_AMENITY_CATEGORIES[0].items.map(
+  (item) => item.label
+);
+
+const BOOKING_HIGHLIGHTS = [
+  {
+    title: "Top 5% of homes",
+    description:
+      "This stay is loved for its comfort, reliability, and consistently great guest experience.",
+    icon: Award,
+  },
+  {
+    title: "Self check-in",
+    description: "Arrive on your schedule and let yourself in easily with the keypad.",
+    icon: KeyRound,
+  },
+  {
+    title: "Beautiful and walkable",
+    description:
+      "Steps from Sibiu's old-town landmarks, cafes, and markets in a scenic central location.",
+    icon: MapPin,
+  },
+] as const;
 
 function BookYourStayClient() {
   const searchParams = useSearchParams();
@@ -395,7 +448,7 @@ function BookYourStayClient() {
                   "pending_reserve_dates",
                   JSON.stringify(userSelectedDates.map((d) => d.getTime()))
                 );
-                router.push("/#sign-in");
+                router.push("/sign-in");
                 return;
               }
               setShowReserveModal(true);
@@ -443,32 +496,71 @@ function BookYourStayClient() {
           </div>
         </div>
       )}
-      {/* Details and Map side by side at the bottom */}
-      <div className="w-full flex flex-col md:flex-row gap-8 mt-12">
-        <div className="order-1 mb-6 w-full rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm md:order-none md:mb-0 md:w-1/2">
-          <ul className="list-disc space-y-2 pl-5 text-base text-neutral-600">
-            <li>Spacious living room with lots of natural light</li>
-            <li>Fully equipped modern kitchen</li>
-            <li>Comfortable queen-size bed and cozy linens</li>
-            <li>High-speed Wi-Fi and smart TV</li>
-            <li>Central heating and air conditioning</li>
-            <li>Quiet, safe building in the heart of Sibiu</li>
-            <li>Walking distance to Bruckenthal Palace, cafes, and markets</li>
-            <li>Self check-in and flexible checkout</li>
-            <li>Perfect for couples, solo travelers</li>
-          </ul>
+      <div className="mt-12 space-y-8">
+        <div className="rounded-[28px] border border-neutral-200 bg-neutral-50 p-6 shadow-sm md:p-8">
+          <Amenities
+            className="mt-0"
+            title="Apartment highlights"
+            categories={BOOKING_AMENITY_CATEGORIES}
+            previewLabels={BOOKING_PREVIEW_LABELS}
+            showToggle={false}
+            previewVariant="compact"
+          />
         </div>
-        <div className="flex justify-center w-full md:w-1/2 mt-0">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d695.4311219448633!2d24.1495347!3d45.7967471!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x474c672b205a18c5%3A0xa2498bd88c1144d7!2sCentral%20am%20Brukenthal!5e0!3m2!1sen!2sat!4v1749071021571!5m2!1sen!2sat"
-            width="100%"
-            height="320"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-            title="Central am Brukenthal Map"
-          ></iframe>
+
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(340px,420px)]">
+          <div className="rounded-[28px] border border-neutral-200 bg-white p-6 shadow-sm md:p-8">
+            <h3 className="text-xl font-semibold text-neutral-900">
+              Why guests love staying here
+            </h3>
+            <div className="mt-6 space-y-6">
+              {BOOKING_HIGHLIGHTS.map((highlight) => {
+                const Icon = highlight.icon;
+
+                return (
+                  <div key={highlight.title} className="flex items-start gap-4">
+                    <div className="rounded-full border border-neutral-200 bg-neutral-50 p-2.5">
+                      <Icon
+                        className="size-5 text-neutral-900"
+                        strokeWidth={1.75}
+                        aria-hidden
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold text-neutral-900">
+                        {highlight.title}
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-neutral-600">
+                        {highlight.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-[28px] border border-neutral-200 bg-white shadow-sm">
+            <div className="border-b border-neutral-200 px-6 py-5">
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Prime Sibiu location
+              </h3>
+              <p className="mt-1 text-sm leading-6 text-neutral-600">
+                Close to Brukenthal Palace, charming cafes, and the old-town
+                streets guests love to explore on foot.
+              </p>
+            </div>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d695.4311219448633!2d24.1495347!3d45.7967471!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x474c672b205a18c5%3A0xa2498bd88c1144d7!2sCentral%20am%20Brukenthal!5e0!3m2!1sen!2sat!4v1749071021571!5m2!1sen!2sat"
+              width="100%"
+              height="320"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Central am Brukenthal Map"
+            ></iframe>
+          </div>
         </div>
       </div>
       {/* Load external script asynchronously using next/script */}
