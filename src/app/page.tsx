@@ -270,6 +270,13 @@ export default function Home() {
                 comfortable night&apos;s sleep, even on the warmest of evenings.
                 <br />
               </p>
+              <button
+                type="button"
+                onClick={() => setExpanded((e) => !e)}
+                className="mt-2 text-sm font-semibold text-neutral-900 underline underline-offset-2 hover:text-brand"
+              >
+                {expanded ? "Show less" : "Read more"}
+              </button>
             </div>
 
             <Amenities />

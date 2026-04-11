@@ -25,8 +25,6 @@ import {
   validateStayRange,
 } from "@/lib/stayAvailability";
 
-//import { DayPicker } from "react-day-picker";
-//import "react-day-picker/style.css";
 import {
   Carousel,
   CarouselContent,
@@ -36,9 +34,6 @@ import {
 } from "@/components/ui/carousel";
 import ReserveStayForm from "@/components/ui/ReserveStayForm";
 import StayCalendar from "./Calendar";
-
-// Define Value type locally based on react-calendar's types
-// Value = Date | [Date, Date] | null
 
 const BOOKING_AMENITY_CATEGORIES: AmenityCategory[] = [
   {

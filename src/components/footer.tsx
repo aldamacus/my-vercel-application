@@ -19,7 +19,7 @@ export default function Footer() {
               alt=""
               width={22}
               height={16}
-              className="opacity-90"
+              className="h-4 w-[22px] shrink-0 object-contain opacity-90"
             />
             Airbnb
           </a>
@@ -34,7 +34,7 @@ export default function Footer() {
               alt=""
               width={22}
               height={16}
-              className="opacity-90"
+              className="h-4 w-[22px] shrink-0 object-contain opacity-90"
             />
             Instagram
           </a>
@@ -49,7 +49,7 @@ export default function Footer() {
               alt=""
               width={22}
               height={16}
-              className="opacity-90"
+              className="h-4 w-[22px] shrink-0 object-contain opacity-90"
             />
             Booking.com
           </a>
