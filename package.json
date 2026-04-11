@@ -8,8 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "npx drizzle-kit push --config drizzle.local.config.ts",
+    "db:push:prod": "npx drizzle-kit push --config drizzle.prod.config.ts --force",
+    "db:push:preview": "npx drizzle-kit push --config drizzle.preview.config.ts --force",
     "db:studio": "npx drizzle-kit studio --config drizzle.local.config.ts",
-    "seed:admin": "dotenv -e .env.local -- npx tsx scripts/seed-admin.ts"
+    "seed:admin": "dotenv -e .env.local -- npx tsx scripts/seed-admin.ts",
+    "seed:admin:preview": "dotenv -e .env.preview.local -- npx tsx scripts/seed-admin.ts",
+    "seed:admin:prod": "dotenv -e .env.production.local -- npx tsx scripts/seed-admin.ts"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
