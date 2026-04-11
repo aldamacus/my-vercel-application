@@ -6,20 +6,20 @@ import {
   Eye,
   EyeOff,
   MailCheck,
-  CheckCircle2,
   UserCircle2,
   LogOut,
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { registerAction, confirmAction, signInAction } from "@/app/actions/auth";
-import { ADMIN_EMAIL, isAdminEmail } from "@/lib/admin";
+import { registerAction, signInAction } from "@/app/actions/auth";
+import { consumeAuthConfirmError, getPostAuthHref } from "@/lib/authRedirect";
+import { ADMIN_EMAIL } from "@/lib/admin";
 
 function sendRegistrationEmails(userEmail: string, token: string) {
   const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
   const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
   const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
-  const confirmUrl = `${window.location.origin}/?confirm=${token}`;
+  const confirmUrl = `${window.location.origin}/sign-in?confirm=${token}`;
 
   // Notify admin
   emailjs.send(serviceId, templateId, {
@@ -80,7 +80,7 @@ const btnPrimary =
 // Inline centered form
 // ---------------------------------------------------------------------------
 
-type View = "signin" | "register" | "pending_confirmation" | "confirmed";
+type View = "signin" | "register" | "pending_confirmation";
 
 export default function SignIn() {
   const router = useRouter();
@@ -104,24 +104,9 @@ export default function SignIn() {
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, []);
 
-  // Auto-confirm when the user clicks the link in their email (?confirm=TOKEN)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("confirm");
-    if (!token) return;
-
-    // Clean the param from the URL without a page reload
-    const clean = new URL(window.location.href);
-    clean.searchParams.delete("confirm");
-    window.history.replaceState({}, "", clean.toString());
-
-    confirmAction(token).then((result) => {
-      if (result.ok) {
-        setView("confirmed");
-      } else {
-        setError(result.error ?? "Confirmation link is invalid or already used.");
-      }
-    });
+    const msg = consumeAuthConfirmError();
+    if (msg) setError(msg);
   }, []);
 
   function resetForm() {
@@ -185,16 +170,7 @@ export default function SignIn() {
     saveSession({ email: result.email! });
     setSession({ email: result.email! });
     resetForm();
-
-    if (isAdminEmail(result.email)) {
-      router.push("/admin");
-      return;
-    }
-
-    // If the user was redirected here after trying to reserve, send them back
-    if (sessionStorage.getItem("pending_reserve_dates")) {
-      router.push("/book-your-stay");
-    }
+    router.push(getPostAuthHref());
   }
 
   // ---- Sign Out ----
@@ -433,23 +409,6 @@ export default function SignIn() {
           </div>
         )}
 
-        {/* ---- Confirmed ---- */}
-        {view === "confirmed" && (
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-50">
-              <CheckCircle2 size={22} className="text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-neutral-900">Account confirmed!</p>
-              <p className="mt-1 text-xs text-neutral-500">
-                Your account is active. You can now sign in.
-              </p>
-            </div>
-            <button onClick={() => switchView("signin")} className={btnPrimary}>
-              Sign in now
-            </button>
-          </div>
-        )}
       </div>
 
       {(view === "signin" || view === "register") && (

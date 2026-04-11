@@ -64,7 +64,7 @@ export async function registerAction(
 
 export async function confirmAction(
   token: string
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; email?: string; error?: string }> {
   const db = getDb();
 
   const [user] = await db
@@ -82,7 +82,7 @@ export async function confirmAction(
     .set({ confirmed: true, confirmToken: null })
     .where(eq(users.email, user.email));
 
-  return { ok: true };
+  return { ok: true, email: user.email };
 }
 
 export async function signInAction(

@@ -3,6 +3,7 @@ import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import { EmailConfirmationHandler } from "@/components/EmailConfirmationHandler";
 import Script from "next/script";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -64,6 +65,7 @@ export default function RootLayout({
         </script>
       </head>
       <body className={`${fontSans.className} min-h-screen flex flex-col`}>
+        <EmailConfirmationHandler />
         <Header />
         <div className="flex-1 w-full bg-neutral-50">{children}</div>
         <Footer />

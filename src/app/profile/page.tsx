@@ -22,6 +22,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { getSession, saveSession, AUTH_CHANGE_EVENT } from "@/components/SignIn";
+import { setAuthReturnPath } from "@/lib/authRedirect";
 import { isAdminEmail } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 
@@ -592,7 +593,8 @@ export default function ProfilePage() {
   useEffect(() => {
     const s = getSession();
     if (!s) {
-      router.replace("/#sign-in");
+      setAuthReturnPath("/profile");
+      router.replace("/sign-in");
       return;
     }
     if (isAdminEmail(s.email)) {
@@ -604,7 +606,10 @@ export default function ProfilePage() {
 
     const handler = () => {
       const updated = getSession();
-      if (!updated) router.replace("/#sign-in");
+      if (!updated) {
+        setAuthReturnPath("/profile");
+        router.replace("/sign-in");
+      }
       else if (isAdminEmail(updated.email)) router.replace("/admin");
       else setSession(updated);
     };
