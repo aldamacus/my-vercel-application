@@ -1,7 +1,9 @@
 "use server";
+
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { profiles } from "@/db/active-schema";
+import { getVerifiedSessionEmail } from "@/lib/session";
 
 export interface ProfileData {
   email: string;
@@ -10,7 +12,10 @@ export interface ProfileData {
   phone: string;
 }
 
-export async function getProfileAction(email: string): Promise<ProfileData | null> {
+export async function getProfileAction(): Promise<ProfileData | null> {
+  const email = await getVerifiedSessionEmail();
+  if (!email) return null;
+
   const db = getDb();
   const [row] = await db
     .select()
@@ -26,11 +31,22 @@ export async function getProfileAction(email: string): Promise<ProfileData | nul
   };
 }
 
-export async function saveProfileAction(data: ProfileData): Promise<void> {
+export async function saveProfileAction(
+  data: Omit<ProfileData, "email"> & { email?: string }
+): Promise<void> {
+  const sessionEmail = await getVerifiedSessionEmail();
+  if (!sessionEmail) return;
+
   const db = getDb();
+  const payload = {
+    email: sessionEmail,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    phone: data.phone,
+  };
   await db
     .insert(profiles)
-    .values(data)
+    .values(payload)
     .onConflictDoUpdate({
       target: profiles.email,
       set: {

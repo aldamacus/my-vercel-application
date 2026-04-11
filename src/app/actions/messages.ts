@@ -1,7 +1,10 @@
 "use server";
+
 import { eq, asc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { messages } from "@/db/active-schema";
+import { isAdminEmail } from "@/lib/admin";
+import { getVerifiedSessionEmail } from "@/lib/session";
 
 export interface MessageRow {
   id: number;
@@ -28,7 +31,10 @@ async function seedMessages(email: string) {
   });
 }
 
-export async function getMessagesAction(email: string): Promise<MessageRow[]> {
+export async function getMessagesAction(): Promise<MessageRow[]> {
+  const email = await getVerifiedSessionEmail();
+  if (!email) return [];
+
   const db = getDb();
 
   let rows = await db
@@ -54,21 +60,73 @@ export async function getMessagesAction(email: string): Promise<MessageRow[]> {
   }));
 }
 
-export async function addMessageAction(
-  email: string,
-  text: string,
-  from: "guest" | "host"
-): Promise<MessageRow> {
+/** Admin-only: read another guest's thread. */
+export async function getGuestMessagesForAdminAction(
+  guestEmail: string
+): Promise<MessageRow[]> {
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) return [];
+
+  const trimmed = guestEmail.trim().toLowerCase();
+  const db = getDb();
+  const rows = await db
+    .select()
+    .from(messages)
+    .where(eq(messages.userEmail, trimmed))
+    .orderBy(asc(messages.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    from: r.from as "guest" | "host",
+    text: r.text,
+    time: formatTime(r.createdAt),
+  }));
+}
+
+export async function addGuestMessageAction(
+  text: string
+): Promise<{ ok: true; row: MessageRow } | { ok: false }> {
+  const email = await getVerifiedSessionEmail();
+  if (!email) return { ok: false };
+
   const db = getDb();
   const [row] = await db
     .insert(messages)
-    .values({ userEmail: email, from, text })
+    .values({ userEmail: email, from: "guest", text })
     .returning();
 
   return {
-    id: row.id,
-    from: row.from as "guest" | "host",
-    text: row.text,
-    time: formatTime(row.createdAt),
+    ok: true,
+    row: {
+      id: row.id,
+      from: "guest",
+      text: row.text,
+      time: formatTime(row.createdAt),
+    },
+  };
+}
+
+export async function addHostMessageForGuestAction(
+  guestEmail: string,
+  text: string
+): Promise<{ ok: true; row: MessageRow } | { ok: false }> {
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) return { ok: false };
+
+  const trimmed = guestEmail.trim().toLowerCase();
+  const db = getDb();
+  const [row] = await db
+    .insert(messages)
+    .values({ userEmail: trimmed, from: "host", text })
+    .returning();
+
+  return {
+    ok: true,
+    row: {
+      id: row.id,
+      from: "host",
+      text: row.text,
+      time: formatTime(row.createdAt),
+    },
   };
 }

@@ -46,3 +46,10 @@ export const messages = pgTable("messages", {
   text:      text("text").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+/** Fixed-window counters for per-IP rate limiting (scope:ip:bucket). */
+export const rateLimitBuckets = pgTable("rate_limit_buckets", {
+  key:       text("key").primaryKey(),
+  count:     integer("count").notNull(),
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+});

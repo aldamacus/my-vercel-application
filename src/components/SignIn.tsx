@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import emailjs from "@emailjs/browser";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Eye,
   EyeOff,
@@ -11,64 +10,22 @@ import {
   Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { registerAction, signInAction } from "@/app/actions/auth";
-import { consumeAuthConfirmError, getPostAuthHref } from "@/lib/authRedirect";
-import { ADMIN_EMAIL } from "@/lib/admin";
-
-function sendRegistrationEmails(userEmail: string, token: string) {
-  const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
-  const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!;
-  const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
-  const confirmUrl = `${window.location.origin}/sign-in?confirm=${token}`;
-
-  // Notify admin
-  emailjs.send(serviceId, templateId, {
-    to_email: ADMIN_EMAIL,
-    name: "New registration",
-    email: userEmail,
-    message: `A new user has registered: ${userEmail}\n\nConfirmation link:\n${confirmUrl}`,
-  }, publicKey).catch(() => {/* best-effort */});
-
-  // Send confirmation link to the user
-  emailjs.send(serviceId, templateId, {
-    to_email: userEmail,
-    name: "Guest",
-    email: userEmail,
-    message: `Welcome! Please confirm your email address by clicking the link below:\n\n${confirmUrl}\n\nIf you did not create an account, you can safely ignore this email.`,
-  }, publicKey).catch(() => {/* best-effort */});
-}
-
-// ---------------------------------------------------------------------------
-// Session helpers (client-side only — stores email after server validates creds)
-// ---------------------------------------------------------------------------
-
-export interface Session {
-  email: string;
-}
-
-const SESSION_KEY = "auth_session";
-export const AUTH_CHANGE_EVENT = "auth-change";
-
-export function getSession(): Session | null {
-  try {
-    return JSON.parse(localStorage.getItem(SESSION_KEY) ?? "null");
-  } catch {
-    return null;
-  }
-}
-
-export function saveSession(session: Session | null) {
-  if (session) {
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-  } else {
-    localStorage.removeItem(SESSION_KEY);
-  }
-  window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
-}
-
-// ---------------------------------------------------------------------------
-// Shared style tokens
-// ---------------------------------------------------------------------------
+import {
+  registerAction,
+  signInAction,
+  signOutAction,
+} from "@/app/actions/auth";
+import { sendRegistrationEmailsAction } from "@/app/actions/outreachEmail";
+import {
+  consumeAuthConfirmError,
+  getPostAuthHref,
+  safeNextPath,
+} from "@/lib/authRedirect";
+import {
+  AUTH_CHANGE_EVENT,
+  fetchAuthSession,
+  type AuthSession,
+} from "@/lib/authClient";
 
 const inputCls =
   "w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-neutral-400 focus:bg-white transition disabled:opacity-50 disabled:cursor-not-allowed";
@@ -76,16 +33,13 @@ const inputCls =
 const btnPrimary =
   "w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
 
-// ---------------------------------------------------------------------------
-// Inline centered form
-// ---------------------------------------------------------------------------
-
 type View = "signin" | "register" | "pending_confirmation";
 
 export default function SignIn() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [view, setView] = useState<View>("signin");
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [email, setEmail] = useState("");
@@ -98,8 +52,8 @@ export default function SignIn() {
   const [pendingEmail, setPendingEmail] = useState("");
 
   useEffect(() => {
-    setSession(getSession());
-    const handler = () => setSession(getSession());
+    fetchAuthSession().then(setSession);
+    const handler = () => fetchAuthSession().then(setSession);
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, []);
@@ -123,7 +77,6 @@ export default function SignIn() {
     resetForm();
   }
 
-  // ---- Register (DB) ----
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -144,16 +97,22 @@ export default function SignIn() {
 
     const confirmedEmail = email.trim().toLowerCase();
     const token = result.token!;
-    
+
+    const mail = await sendRegistrationEmailsAction({
+      userEmail: confirmedEmail,
+      token,
+    });
     setPendingEmail(confirmedEmail);
-    sendRegistrationEmails(confirmedEmail, token);
     resetForm();
     setView("pending_confirmation");
+    if (!mail.ok) {
+      setError(
+        mail.error ??
+          "Account created, but confirmation emails could not be sent. Contact the host if you need help."
+      );
+    }
   }
 
-
-
-  // ---- Sign In (DB) ----
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -167,22 +126,24 @@ export default function SignIn() {
       return;
     }
 
-    saveSession({ email: result.email! });
+    const dest =
+      safeNextPath(searchParams.get("next")) ??
+      getPostAuthHref({ email: result.email! });
     setSession({ email: result.email! });
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     resetForm();
-    router.push(getPostAuthHref());
+    router.push(dest);
+    router.refresh();
   }
 
-  // ---- Sign Out ----
-  function handleSignOut() {
-    saveSession(null);
+  async function handleSignOut() {
+    await signOutAction();
     setSession(null);
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     switchView("signin");
+    router.refresh();
   }
 
-  // ---------------------------------------------------------------------------
-  // Signed-in card
-  // ---------------------------------------------------------------------------
   if (session) {
     return (
       <div className="flex flex-col items-center gap-5 rounded-2xl border border-neutral-200 bg-white px-8 py-10 shadow-sm">
@@ -194,6 +155,7 @@ export default function SignIn() {
           <p className="mt-1 text-sm text-neutral-500">{session.email}</p>
         </div>
         <button
+          type="button"
           onClick={handleSignOut}
           className="flex items-center gap-2 rounded-lg border border-neutral-200 px-5 py-2 text-sm text-neutral-600 transition hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900"
         >
@@ -204,15 +166,12 @@ export default function SignIn() {
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // Form card
-  // ---------------------------------------------------------------------------
   return (
     <div className="w-full max-w-sm rounded-2xl border border-neutral-200 bg-white shadow-sm">
-      {/* Tabs */}
       {(view === "signin" || view === "register") && (
         <div className="flex border-b border-neutral-100">
           <button
+            type="button"
             onClick={() => switchView("signin")}
             className={cn(
               "flex-1 py-3.5 text-sm font-medium transition",
@@ -224,6 +183,7 @@ export default function SignIn() {
             Sign in
           </button>
           <button
+            type="button"
             onClick={() => switchView("register")}
             className={cn(
               "flex-1 py-3.5 text-sm font-medium transition",
@@ -238,7 +198,6 @@ export default function SignIn() {
       )}
 
       <div className="p-6">
-        {/* ---- Sign In ---- */}
         {view === "signin" && (
           <form onSubmit={handleSignIn} className="flex flex-col gap-3">
             <div>
@@ -293,7 +252,6 @@ export default function SignIn() {
           </form>
         )}
 
-        {/* ---- Register ---- */}
         {view === "register" && (
           <form onSubmit={handleRegister} className="flex flex-col gap-3">
             <div className="flex gap-2">
@@ -349,7 +307,7 @@ export default function SignIn() {
             <div>
               <label className="mb-1 block text-xs font-medium text-neutral-600" htmlFor="reg-pw">
                 Password{" "}
-                <span className="font-normal text-neutral-400">(min. 6 characters)</span>
+                <span className="font-normal text-neutral-400">(min. 8 characters)</span>
               </label>
               <div className="relative">
                 <input
@@ -358,7 +316,7 @@ export default function SignIn() {
                   autoComplete="new-password"
                   required
                   disabled={submitting}
-                  minLength={6}
+                  minLength={8}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -384,7 +342,6 @@ export default function SignIn() {
           </form>
         )}
 
-        {/* ---- Pending confirmation ---- */}
         {view === "pending_confirmation" && (
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
@@ -401,6 +358,7 @@ export default function SignIn() {
             </div>
             {error && <p className="text-xs text-red-500">{error}</p>}
             <button
+              type="button"
               onClick={() => switchView("signin")}
               className="text-xs text-neutral-400 underline underline-offset-2 hover:text-neutral-600 transition"
             >
@@ -408,7 +366,6 @@ export default function SignIn() {
             </button>
           </div>
         )}
-
       </div>
 
       {(view === "signin" || view === "register") && (

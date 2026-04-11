@@ -2,15 +2,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import SignIn, {
-  getSession,
+import SignIn from "@/components/SignIn";
+import {
   AUTH_CHANGE_EVENT,
-  type Session,
-} from "@/components/SignIn";
+  fetchAuthSession,
+  type AuthSession,
+} from "@/lib/authClient";
 import { Amenities } from "@/components/Amenities";
 import { Button } from "@/components/ui/button";
 import { addDays } from "date-fns";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, Suspense } from "react";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
 import {
   findNextAvailableStay,
@@ -41,11 +42,11 @@ export default function Home() {
     null
   );
   const datesPrefilledRef = useRef(false);
-  const [authSession, setAuthSession] = useState<Session | null>(null);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
 
   useEffect(() => {
-    setAuthSession(getSession());
-    const handler = () => setAuthSession(getSession());
+    fetchAuthSession().then(setAuthSession);
+    const handler = () => fetchAuthSession().then(setAuthSession);
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, []);
@@ -589,7 +590,13 @@ export default function Home() {
               Sign in or create an account to manage your bookings.
             </p>
           </div>
-          <SignIn />
+          <Suspense
+            fallback={
+              <div className="h-64 w-full max-w-sm animate-pulse rounded-2xl bg-neutral-200/80" />
+            }
+          >
+            <SignIn />
+          </Suspense>
         </section>
       )}
     </main>

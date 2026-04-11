@@ -1,8 +1,10 @@
 "use server";
+
 import { eq, asc } from "drizzle-orm";
 import { getDb } from "@/db";
 import { bookings, messages } from "@/db/active-schema";
 import { isAdminEmail } from "@/lib/admin";
+import { getVerifiedSessionEmail } from "@/lib/session";
 
 export interface BookingRow {
   id: string;
@@ -40,9 +42,11 @@ export interface AdminBookingRow extends BookingRow {
   userEmail: string;
 }
 
-export async function getBookingsAction(email: string): Promise<BookingRow[]> {
-  const db = getDb();
+export async function getBookingsAction(): Promise<BookingRow[]> {
+  const email = await getVerifiedSessionEmail();
+  if (!email) return [];
 
+  const db = getDb();
   const rows = await db
     .select()
     .from(bookings)
@@ -52,10 +56,13 @@ export async function getBookingsAction(email: string): Promise<BookingRow[]> {
   return rows.map(mapBookingRow);
 }
 
-export async function getAllBookingsForAdminAction(
-  actorEmail: string
-): Promise<{ ok: boolean; bookings?: AdminBookingRow[] }> {
-  if (!isAdminEmail(actorEmail)) return { ok: false };
+export async function getAllBookingsForAdminAction(): Promise<{
+  ok: boolean;
+  bookings?: AdminBookingRow[];
+}> {
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) return { ok: false };
+
   const db = getDb();
   const rows = await db.select().from(bookings).orderBy(asc(bookings.createdAt));
   return {
@@ -65,7 +72,6 @@ export async function getAllBookingsForAdminAction(
 }
 
 export async function updateBookingByAdminAction(
-  actorEmail: string,
   bookingId: string,
   patch: {
     status?: string;
@@ -74,7 +80,10 @@ export async function updateBookingByAdminAction(
     hostNotes?: string;
   }
 ): Promise<{ ok: boolean; error?: string }> {
-  if (!isAdminEmail(actorEmail)) return { ok: false, error: "Forbidden." };
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) {
+    return { ok: false, error: "Forbidden." };
+  }
   const db = getDb();
   const setPayload = {
     ...(patch.status !== undefined ? { status: patch.status } : {}),
@@ -93,10 +102,13 @@ export async function updateBookingByAdminAction(
   }
 }
 
-export async function listGuestEmailsForAdminAction(
-  actorEmail: string
-): Promise<{ ok: boolean; emails?: string[] }> {
-  if (!isAdminEmail(actorEmail)) return { ok: false };
+export async function listGuestEmailsForAdminAction(): Promise<{
+  ok: boolean;
+  emails?: string[];
+}> {
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) return { ok: false };
+
   const db = getDb();
   const fromBookings = await db
     .select({ userEmail: bookings.userEmail })
@@ -115,15 +127,17 @@ export async function listGuestEmailsForAdminAction(
   return { ok: true, emails };
 }
 
-export async function createBookingAction(
-  userEmail: string,
-  data: {
-    checkIn: string;
-    checkOut: string;
-    nights: number;
-    total: string;
+export async function createBookingAction(data: {
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  total: string;
+}): Promise<{ ok: boolean; id?: string; error?: string }> {
+  const userEmail = await getVerifiedSessionEmail();
+  if (!userEmail) {
+    return { ok: false, error: "You must be signed in to save a booking." };
   }
-): Promise<{ ok: boolean; id?: string; error?: string }> {
+
   const db = getDb();
   const id = crypto.randomUUID();
   try {

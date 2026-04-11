@@ -5,15 +5,19 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getSession, AUTH_CHANGE_EVENT, type Session } from "@/components/SignIn";
+import {
+  AUTH_CHANGE_EVENT,
+  fetchAuthSession,
+  type AuthSession,
+} from "@/lib/authClient";
 import { isAdminEmail } from "@/lib/admin";
 
 function HeaderAuth() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<AuthSession | null>(null);
 
   useEffect(() => {
-    setSession(getSession());
-    const handler = () => setSession(getSession());
+    fetchAuthSession().then(setSession);
+    const handler = () => fetchAuthSession().then(setSession);
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, []);

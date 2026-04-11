@@ -4,12 +4,17 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { bookings, propertySettings } from "@/db/active-schema";
 import { isAdminEmail } from "@/lib/admin";
+import { getVerifiedSessionEmail } from "@/lib/session";
 
 const DEFAULT_ID = "default";
 
-export async function getPropertyWifiForGuestAction(
-  userEmail: string
-): Promise<{ wifiSsid: string; wifiPassword: string } | null> {
+export async function getPropertyWifiForGuestAction(): Promise<{
+  wifiSsid: string;
+  wifiPassword: string;
+} | null> {
+  const userEmail = await getVerifiedSessionEmail();
+  if (!userEmail) return null;
+
   const db = getDb();
   const trimmed = userEmail.trim().toLowerCase();
   const [hasBooking] = await db
@@ -28,10 +33,14 @@ export async function getPropertyWifiForGuestAction(
   return { wifiSsid: row.wifiSsid, wifiPassword: row.wifiPassword };
 }
 
-export async function getPropertyWifiAdminAction(
-  actorEmail: string
-): Promise<{ ok: boolean; wifiSsid?: string; wifiPassword?: string }> {
-  if (!isAdminEmail(actorEmail)) return { ok: false };
+export async function getPropertyWifiAdminAction(): Promise<{
+  ok: boolean;
+  wifiSsid?: string;
+  wifiPassword?: string;
+}> {
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) return { ok: false };
+
   const db = getDb();
   let [row] = await db
     .select()
@@ -57,11 +66,13 @@ export async function getPropertyWifiAdminAction(
   };
 }
 
-export async function setPropertyWifiAction(
-  actorEmail: string,
-  data: { wifiSsid: string; wifiPassword: string }
-): Promise<{ ok: boolean }> {
-  if (!isAdminEmail(actorEmail)) return { ok: false };
+export async function setPropertyWifiAction(data: {
+  wifiSsid: string;
+  wifiPassword: string;
+}): Promise<{ ok: boolean }> {
+  const actor = await getVerifiedSessionEmail();
+  if (!actor || !isAdminEmail(actor)) return { ok: false };
+
   const db = getDb();
   await db
     .insert(propertySettings)

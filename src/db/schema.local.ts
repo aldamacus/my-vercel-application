@@ -54,6 +54,12 @@ export const messagesInTest = test.table("messages", {
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow(),
 });
 
+export const rateLimitBucketsInTest = test.table("rate_limit_buckets", {
+  key:       text().primaryKey().notNull(),
+  count:     integer().notNull(),
+  expiresAt: timestamp("expires_at", { mode: "string" }).notNull(),
+});
+
 // Aliases matching schema.ts export names — used by active-schema.ts
 export {
   usersInTest as users,
@@ -61,4 +67,5 @@ export {
   bookingsInTest as bookings,
   messagesInTest as messages,
   propertySettingsInTest as propertySettings,
+  rateLimitBucketsInTest as rateLimitBuckets,
 };

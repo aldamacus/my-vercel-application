@@ -1,13 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import emailjs from "@emailjs/browser";
 import { createBookingAction } from "@/app/actions/bookings";
-
-const emailJsPublicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-if (emailJsPublicKey) {
-  emailjs.init(emailJsPublicKey);
-}
+import { sendReservationEmailAction } from "@/app/actions/outreachEmail";
 
 const CONTACT_INBOX_EMAIL = "central.brukenthal@gmail.com";
 
@@ -91,34 +86,32 @@ export default function ReserveStayForm({
 
     setSending(true);
 
-    const [dbResult] = await Promise.all([
+    const subject = `Reservation request — ${nights} night(s) — ${rangeLabel}`;
+    const [dbResult, emailResult] = await Promise.all([
       userEmail
-        ? createBookingAction(userEmail, {
+        ? createBookingAction({
             checkIn,
             checkOut,
             nights,
             total: "TBD",
           })
-        : Promise.resolve({ ok: true }),
-      emailjs
-        .send(
-          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-          {
-            to_email: CONTACT_INBOX_EMAIL,
-            name,
-            email,
-            address,
-            message: composedBody,
-            booking_dates: rangeLabel,
-            nights: String(nights),
-            subject: `Reservation request — ${nights} night(s) — ${rangeLabel}`,
-          }
-        )
-        .catch(() => null),
+        : Promise.resolve({ ok: true as const }),
+      sendReservationEmailAction({
+        name,
+        email,
+        address,
+        message: composedBody,
+        bookingDates: rangeLabel,
+        nights: String(nights),
+        subject,
+      }),
     ]);
 
     setSending(false);
+    if (!emailResult.ok) {
+      setFeedback("error");
+      return;
+    }
     if (!dbResult.ok) {
       setFeedback("error");
       return;

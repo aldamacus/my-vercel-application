@@ -2,7 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getProfileAction, saveProfileAction } from "@/app/actions/profile";
-import { getMessagesAction, addMessageAction, type MessageRow } from "@/app/actions/messages";
+import {
+  getMessagesAction,
+  addGuestMessageAction,
+  type MessageRow,
+} from "@/app/actions/messages";
 import { getBookingsAction, type BookingRow } from "@/app/actions/bookings";
 import { getPropertyWifiForGuestAction } from "@/app/actions/property-settings";
 import {
@@ -21,7 +25,8 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import { getSession, saveSession, AUTH_CHANGE_EVENT } from "@/components/SignIn";
+import { AUTH_CHANGE_EVENT, fetchAuthSession } from "@/lib/authClient";
+import { signOutAction } from "@/app/actions/auth";
 import { setAuthReturnPath } from "@/lib/authRedirect";
 import { isAdminEmail } from "@/lib/admin";
 import { cn } from "@/lib/utils";
@@ -47,7 +52,7 @@ function ProfileForm({ email }: { email: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getProfileAction(email).then((p) => {
+    getProfileAction().then((p) => {
       if (p) setProfile(p);
       setLoading(false);
     });
@@ -187,11 +192,9 @@ function CopyField({ label, value, icon }: { label: string; value: string; icon:
 // ---------------------------------------------------------------------------
 function BookingModal({
   booking,
-  guestEmail,
   onClose,
 }: {
   booking: BookingRow;
-  guestEmail: string;
   onClose: () => void;
 }) {
   const [wifi, setWifi] = useState<{ wifiSsid: string; wifiPassword: string } | null>(null);
@@ -200,7 +203,7 @@ function BookingModal({
   useEffect(() => {
     let cancelled = false;
     setWifiLoading(true);
-    getPropertyWifiForGuestAction(guestEmail).then((w) => {
+    getPropertyWifiForGuestAction().then((w) => {
       if (cancelled) return;
       setWifi(w ?? { wifiSsid: "", wifiPassword: "" });
       setWifiLoading(false);
@@ -208,7 +211,7 @@ function BookingModal({
     return () => {
       cancelled = true;
     };
-  }, [guestEmail]);
+  }, []);
 
   const entrance = booking.entranceCode.trim();
   const notes = booking.hostNotes.trim();
@@ -405,17 +408,17 @@ function BookingCard({
 // ---------------------------------------------------------------------------
 // Bookings panel
 // ---------------------------------------------------------------------------
-function BookingsPanel({ email }: { email: string }) {
+function BookingsPanel() {
   const [allBookings, setAllBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
 
   useEffect(() => {
-    getBookingsAction(email).then((rows) => {
+    getBookingsAction().then((rows) => {
       setAllBookings(rows);
       setLoading(false);
     });
-  }, [email]);
+  }, []);
 
   const pendingNew = allBookings.filter((b) => b.status === "new");
   const upcoming = allBookings.filter((b) => b.status === "upcoming");
@@ -472,7 +475,6 @@ function BookingsPanel({ email }: { email: string }) {
       {selectedBooking && (
         <BookingModal
           booking={selectedBooking}
-          guestEmail={email}
           onClose={() => setSelectedBooking(null)}
         />
       )}
@@ -480,7 +482,7 @@ function BookingsPanel({ email }: { email: string }) {
   );
 }
 
-function MessagesPanel({ email }: { email: string }) {
+function MessagesPanel() {
   const [msgs, setMsgs] = useState<MessageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -488,11 +490,11 @@ function MessagesPanel({ email }: { email: string }) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    getMessagesAction(email).then((rows) => {
+    getMessagesAction().then((rows) => {
       setMsgs(rows);
       setLoading(false);
     });
-  }, [email]);
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -502,8 +504,8 @@ function MessagesPanel({ email }: { email: string }) {
     e.preventDefault();
     if (!draft.trim() || sending) return;
     setSending(true);
-    const newMsg = await addMessageAction(email, draft.trim(), "guest");
-    setMsgs((prev) => [...prev, newMsg]);
+    const sent = await addGuestMessageAction(draft.trim());
+    if (sent.ok) setMsgs((prev) => [...prev, sent.row]);
     setDraft("");
     setSending(false);
   }
@@ -586,40 +588,45 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [session, setSession] = useState<ReturnType<typeof getSession>>(null);
+  const [session, setSession] = useState<Awaited<
+    ReturnType<typeof fetchAuthSession>
+  > | null>(null);
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<Tab>("profile");
 
   useEffect(() => {
-    const s = getSession();
-    if (!s) {
-      setAuthReturnPath("/profile");
-      router.replace("/sign-in");
-      return;
-    }
-    if (isAdminEmail(s.email)) {
-      router.replace("/admin");
-      return;
-    }
-    setSession(s);
-    setReady(true);
-
-    const handler = () => {
-      const updated = getSession();
-      if (!updated) {
+    fetchAuthSession().then((s) => {
+      if (!s) {
         setAuthReturnPath("/profile");
         router.replace("/sign-in");
+        return;
       }
-      else if (isAdminEmail(updated.email)) router.replace("/admin");
-      else setSession(updated);
+      if (isAdminEmail(s.email)) {
+        router.replace("/admin");
+        return;
+      }
+      setSession(s);
+      setReady(true);
+    });
+
+    const handler = () => {
+      fetchAuthSession().then((updated) => {
+        if (!updated) {
+          setAuthReturnPath("/profile");
+          router.replace("/sign-in");
+        } else if (isAdminEmail(updated.email)) router.replace("/admin");
+        else setSession(updated);
+      });
     };
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, [router]);
 
-  function handleSignOut() {
-    saveSession(null);
+  async function handleSignOut() {
+    await signOutAction();
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     router.push("/");
+    router.refresh();
   }
 
   if (!ready || !session) return null;
@@ -675,8 +682,8 @@ export default function ProfilePage() {
         {/* ---- Right content ---- */}
         <main className="min-w-0 flex-1 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
           {tab === "profile" && <ProfileForm email={session.email} />}
-          {tab === "bookings" && <BookingsPanel email={session.email} />}
-          {tab === "messages" && <MessagesPanel email={session.email} />}
+          {tab === "bookings" && <BookingsPanel />}
+          {tab === "messages" && <MessagesPanel />}
         </main>
       </div>
     </div>

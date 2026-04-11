@@ -1,4 +1,3 @@
-import { getSession } from "@/components/SignIn";
 import { isAdminEmail } from "@/lib/admin";
 
 const AUTH_RETURN_KEY = "auth_return";
@@ -16,16 +15,22 @@ export function consumeAuthConfirmError(): string | null {
   return msg;
 }
 
-export function getPostAuthHref(): string {
+/** Same-origin path only. Rejects protocol-relative and external URLs. */
+export function safeNextPath(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
+export function getPostAuthHref(options?: { email?: string }): string {
   if (typeof window === "undefined") return "/";
   const ret = sessionStorage.getItem(AUTH_RETURN_KEY);
   if (ret) {
     sessionStorage.removeItem(AUTH_RETURN_KEY);
-    return ret;
+    const safe = safeNextPath(ret);
+    if (safe) return safe;
   }
-  const session = getSession();
-  const email = session?.email ?? "";
-  if (isAdminEmail(email)) return "/admin";
+  const email = options?.email ?? "";
+  if (email && isAdminEmail(email)) return "/admin";
   if (sessionStorage.getItem("pending_reserve_dates")) return "/book-your-stay";
   return "/";
 }

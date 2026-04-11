@@ -18,15 +18,7 @@ import "./env-bootstrap";
 import { eq } from "drizzle-orm";
 import { getDb } from "../src/db";
 import { users, profiles } from "../src/db/active-schema";
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import { hashPassword } from "../src/lib/password";
 
 async function main() {
   const db = getDb();

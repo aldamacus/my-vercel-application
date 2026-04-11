@@ -1,23 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import emailjs from "@emailjs/browser";
-
-const emailJsPublicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-if (emailJsPublicKey) {
-  emailjs.init(emailJsPublicKey);
-}
+import { sendContactEmailAction } from "@/app/actions/outreachEmail";
 
 export type ContactFormProps = {
   /** Called when the user dismisses the success or error popup (close parent modal). */
   onClosed?: () => void;
 };
 
-/**
- * Inbox for contact form submissions.
- * In EmailJS: set the template “To email” to `{{to_email}}` (or a static
- * central.brukenthal@gmail.com). Body can use {{name}}, {{email}}, {{message}}.
- */
 const CONTACT_INBOX_EMAIL = "central.brukenthal@gmail.com";
 
 export default function ContactForm({ onClosed }: ContactFormProps) {
@@ -25,7 +15,7 @@ export default function ContactForm({ onClosed }: ContactFormProps) {
   const [sending, setSending] = useState(false);
   const [feedback, setFeedback] = useState<null | "success" | "error">(null);
 
-  const sendEmail = (e: React.FormEvent<HTMLFormElement>) => {
+  const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formRef.current) return;
     const form = formRef.current;
@@ -35,26 +25,14 @@ export default function ContactForm({ onClosed }: ContactFormProps) {
     const message = String(fd.get("message") ?? "").trim();
 
     setSending(true);
-    emailjs
-      .send(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
-        {
-          to_email: CONTACT_INBOX_EMAIL,
-          name,
-          email,
-          message,
-        }
-      )
-      .then(() => {
-        setSending(false);
-        form.reset();
-        setFeedback("success");
-      })
-      .catch(() => {
-        setSending(false);
-        setFeedback("error");
-      });
+    const res = await sendContactEmailAction({ name, email, message });
+    setSending(false);
+    if (res.ok) {
+      form.reset();
+      setFeedback("success");
+    } else {
+      setFeedback("error");
+    }
   };
 
   const handleDismissFeedback = () => {
@@ -198,7 +176,7 @@ export default function ContactForm({ onClosed }: ContactFormProps) {
                   className="text-center text-sm text-neutral-600"
                 >
                   Something went wrong. Please try again later or email us
-                  directly.
+                  directly at {CONTACT_INBOX_EMAIL}.
                 </p>
               </>
             )}

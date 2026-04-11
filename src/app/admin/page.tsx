@@ -10,7 +10,8 @@ import {
   Send,
   LogOut,
 } from "lucide-react";
-import { getSession, saveSession, AUTH_CHANGE_EVENT } from "@/components/SignIn";
+import { AUTH_CHANGE_EVENT, fetchAuthSession } from "@/lib/authClient";
+import { signOutAction } from "@/app/actions/auth";
 import { isAdminEmail } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 import {
@@ -24,8 +25,8 @@ import {
   setPropertyWifiAction,
 } from "@/app/actions/property-settings";
 import {
-  getMessagesAction,
-  addMessageAction,
+  getGuestMessagesForAdminAction,
+  addHostMessageForGuestAction,
   type MessageRow,
 } from "@/app/actions/messages";
 
@@ -63,21 +64,23 @@ export default function AdminPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const s = getSession();
-    if (!s || !isAdminEmail(s.email)) {
-      router.replace("/");
-      return;
-    }
-    setActorEmail(s.email);
-    setReady(true);
-
-    const handler = () => {
-      const next = getSession();
-      if (!next || !isAdminEmail(next.email)) {
+    fetchAuthSession().then((s) => {
+      if (!s || !isAdminEmail(s.email)) {
         router.replace("/");
         return;
       }
-      setActorEmail(next.email);
+      setActorEmail(s.email);
+      setReady(true);
+    });
+
+    const handler = () => {
+      fetchAuthSession().then((next) => {
+        if (!next || !isAdminEmail(next.email)) {
+          router.replace("/");
+          return;
+        }
+        setActorEmail(next.email);
+      });
     };
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
@@ -86,7 +89,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!actorEmail) return;
     setBookingsLoading(true);
-    getAllBookingsForAdminAction(actorEmail).then((res) => {
+    getAllBookingsForAdminAction().then((res) => {
       if (res.ok && res.bookings) setBookings(res.bookings);
       setBookingsLoading(false);
     });
@@ -95,7 +98,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (!actorEmail) return;
     setWifiLoading(true);
-    getPropertyWifiAdminAction(actorEmail).then((res) => {
+    getPropertyWifiAdminAction().then((res) => {
       if (res.ok) {
         setWifiSsid(res.wifiSsid ?? "");
         setWifiPassword(res.wifiPassword ?? "");
@@ -123,7 +126,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!actorEmail || tab !== "messages") return;
-    listGuestEmailsForAdminAction(actorEmail).then((res) => {
+    listGuestEmailsForAdminAction().then((res) => {
       if (res.ok && res.emails) {
         setGuestEmails(res.emails);
         setSelectedGuest((prev) =>
@@ -139,7 +142,7 @@ export default function AdminPage() {
       return;
     }
     setMsgsLoading(true);
-    getMessagesAction(selectedGuest).then((rows) => {
+    getGuestMessagesForAdminAction(selectedGuest).then((rows) => {
       setMsgs(rows);
       setMsgsLoading(false);
     });
@@ -154,7 +157,7 @@ export default function AdminPage() {
     if (!actorEmail || !selectedId) return;
     setSavingBooking(true);
     setBookingError("");
-    const res = await updateBookingByAdminAction(actorEmail, selectedId, {
+    const res = await updateBookingByAdminAction(selectedId, {
       status: editStatus,
       total: editTotal,
       entranceCode: editEntrance,
@@ -184,7 +187,7 @@ export default function AdminPage() {
     e.preventDefault();
     if (!actorEmail) return;
     setSavingWifi(true);
-    await setPropertyWifiAction(actorEmail, {
+    await setPropertyWifiAction({
       wifiSsid,
       wifiPassword,
     });
@@ -195,15 +198,17 @@ export default function AdminPage() {
     e.preventDefault();
     if (!selectedGuest || !draft.trim() || sending) return;
     setSending(true);
-    const newMsg = await addMessageAction(selectedGuest, draft.trim(), "host");
-    setMsgs((prev) => [...prev, newMsg]);
+    const sent = await addHostMessageForGuestAction(selectedGuest, draft.trim());
+    if (sent.ok) setMsgs((prev) => [...prev, sent.row]);
     setDraft("");
     setSending(false);
   }
 
-  function handleSignOut() {
-    saveSession(null);
+  async function handleSignOut() {
+    await signOutAction();
+    window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     router.push("/");
+    router.refresh();
   }
 
   if (!ready || !actorEmail) return null;

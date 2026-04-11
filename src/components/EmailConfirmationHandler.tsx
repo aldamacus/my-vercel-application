@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { confirmAction } from "@/app/actions/auth";
-import { saveSession } from "@/components/SignIn";
+import { AUTH_CHANGE_EVENT } from "@/lib/authClient";
 import { AUTH_CONFIRM_ERROR_KEY, getPostAuthHref } from "@/lib/authRedirect";
 
 export function EmailConfirmationHandler() {
@@ -23,8 +23,9 @@ export function EmailConfirmationHandler() {
     confirmAction(token).then((result) => {
       setConfirming(false);
       if (result.ok && result.email) {
-        saveSession({ email: result.email });
-        router.replace(getPostAuthHref());
+        window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
+        router.replace(getPostAuthHref({ email: result.email }));
+        router.refresh();
         return;
       }
       sessionStorage.setItem(

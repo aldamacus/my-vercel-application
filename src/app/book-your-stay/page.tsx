@@ -18,7 +18,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import ContactForm from "@/components/ui/ContactForm";
 import { Amenities, type AmenityCategory } from "@/components/Amenities";
 import { useMergedIcalAvailability } from "@/hooks/useMergedIcalAvailability";
-import { getSession } from "@/components/SignIn";
+import { AUTH_CHANGE_EVENT, fetchAuthSession } from "@/lib/authClient";
 import { getProfileAction } from "@/app/actions/profile";
 import {
   parseDateInputLocal,
@@ -87,12 +87,23 @@ function BookYourStayClient() {
   const [showReserveModal, setShowReserveModal] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [userFullName, setUserFullName] = useState<string | undefined>(undefined);
+  const [authEmail, setAuthEmail] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    const session = getSession();
-    if (!session) return;
+    fetchAuthSession().then((s) => setAuthEmail(s?.email));
+    const onAuth = () =>
+      fetchAuthSession().then((s) => setAuthEmail(s?.email));
+    window.addEventListener(AUTH_CHANGE_EVENT, onAuth);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, onAuth);
+  }, []);
 
-    getProfileAction(session.email).then((profile) => {
+  useEffect(() => {
+    if (!authEmail) {
+      setUserFullName(undefined);
+      return;
+    }
+
+    getProfileAction().then((profile) => {
       if (profile) {
         const full = [profile.firstName, profile.lastName].filter(Boolean).join(" ");
         if (full) setUserFullName(full);
@@ -113,7 +124,7 @@ function BookYourStayClient() {
         // ignore malformed data
       }
     });
-  }, []);
+  }, [authEmail]);
 
   // Array for user-selected dates (not Airbnb booked dates)
   const [userSelectedDates, setUserSelectedDates] = useState<Date[]>([]);
@@ -437,8 +448,7 @@ function BookYourStayClient() {
             }`}
             onClick={() => {
               if (userSelectedDates.length < 2) return;
-              const session = getSession();
-              if (!session) {
+              if (!authEmail) {
                 sessionStorage.setItem(
                   "pending_reserve_dates",
                   JSON.stringify(userSelectedDates.map((d) => d.getTime()))
@@ -485,7 +495,7 @@ function BookYourStayClient() {
               key={userSelectedDates.map((d) => d.getTime()).join(",")}
               selectedDates={userSelectedDates}
               onClosed={() => setShowReserveModal(false)}
-              userEmail={getSession()?.email}
+              userEmail={authEmail}
               userName={userFullName}
             />
           </div>

@@ -18,3 +18,4 @@ export const profiles         = local ? localSchema.profiles         : publicSch
 export const bookings         = local ? localSchema.bookings         : publicSchema.bookings;
 export const messages         = local ? localSchema.messages         : publicSchema.messages;
 export const propertySettings = local ? localSchema.propertySettings : publicSchema.propertySettings;
+export const rateLimitBuckets = local ? localSchema.rateLimitBuckets : publicSchema.rateLimitBuckets;

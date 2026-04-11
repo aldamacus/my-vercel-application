@@ -1,27 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import SignIn, { getSession, AUTH_CHANGE_EVENT } from "@/components/SignIn";
-import { getPostAuthHref } from "@/lib/authRedirect";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import SignIn from "@/components/SignIn";
+import { AUTH_CHANGE_EVENT, fetchAuthSession } from "@/lib/authClient";
+import { getPostAuthHref, safeNextPath } from "@/lib/authRedirect";
 
-export default function SignInPage() {
+function SignInGate() {
   const router = useRouter();
-  const [session, setSession] = useState<ReturnType<typeof getSession>>(null);
+  const searchParams = useSearchParams();
+  const [session, setSession] = useState<Awaited<
+    ReturnType<typeof fetchAuthSession>
+  > | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setSession(getSession());
-    setHydrated(true);
-    const handler = () => setSession(getSession());
+    fetchAuthSession().then((s) => {
+      setSession(s);
+      setHydrated(true);
+    });
+    const handler = () => fetchAuthSession().then(setSession);
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handler);
   }, []);
 
   useEffect(() => {
     if (!hydrated || !session) return;
-    router.replace(getPostAuthHref());
-  }, [hydrated, session, router]);
+    const next = safeNextPath(searchParams.get("next"));
+    router.replace(next ?? getPostAuthHref({ email: session.email }));
+  }, [hydrated, session, router, searchParams]);
 
   if (!hydrated) return null;
 
@@ -37,5 +44,19 @@ export default function SignInPage() {
       </div>
       <SignIn />
     </main>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-neutral-50 px-4">
+          <div className="h-64 w-full max-w-sm animate-pulse rounded-2xl bg-neutral-200/80" />
+        </main>
+      }
+    >
+      <SignInGate />
+    </Suspense>
   );
 }

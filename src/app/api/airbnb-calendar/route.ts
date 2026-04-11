@@ -2,6 +2,7 @@ import { log } from "console";
 import { unstable_cache } from "next/cache";
 import { NextResponse } from "next/server";
 import ical from "node-ical";
+import { consumeRateLimit, getRequestIp } from "@/lib/rateLimit";
 
 const REVALIDATE_SECONDS = 300;
 
@@ -31,7 +32,21 @@ const getMergedCalendarEvents = unstable_cache(
   { revalidate: REVALIDATE_SECONDS }
 );
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (
+    !(await consumeRateLimit(
+      "calendar_api",
+      getRequestIp(request.headers),
+      120,
+      60 * 1000
+    )).ok
+  ) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      { status: 429 }
+    );
+  }
+
   try {
     const allEvents = await getMergedCalendarEvents();
     return NextResponse.json(allEvents);
@@ -43,12 +58,8 @@ export async function GET() {
       );
     }
     log("Error fetching calendars:", e);
-    const errorMessage =
-      typeof e === "object" && e !== null && "message" in e
-        ? (e as { message: string }).message
-        : String(e);
     return NextResponse.json(
-      { error: "Failed to fetch calendars " + errorMessage },
+      { error: "Failed to fetch calendars" },
       { status: 500 }
     );
   }

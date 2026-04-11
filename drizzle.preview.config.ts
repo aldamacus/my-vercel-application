@@ -17,12 +17,11 @@ import type { Config } from "drizzle-kit";
 config({ path: ".env.preview.local" });
 
 const url =
-  process.env.PREVIEW_DATABASE_URL?.trim() ||
   process.env.DATABASE_URL?.trim();
 
 if (!url) {
   throw new Error(
-    "drizzle.preview.config: add `.env.preview.local` with PREVIEW_DATABASE_URL or DATABASE_URL."
+    "drizzle.preview.config: add `.env.preview.local` with  DATABASE_URL."
   );
 }
 

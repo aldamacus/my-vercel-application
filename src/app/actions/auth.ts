@@ -1,16 +1,12 @@
 "use server";
+
+import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { users, profiles } from "@/db/active-schema";
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hash = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hash))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import { hashPassword, isLegacySha256Hash, verifyPassword } from "@/lib/password";
+import { createSession, clearSession } from "@/lib/session";
+import { consumeRateLimit, getRequestIp } from "@/lib/rateLimit";
 
 function randomToken(): string {
   return crypto.randomUUID().replace(/-/g, "");
@@ -24,6 +20,21 @@ export async function registerAction(
   firstName: string = "",
   lastName: string = ""
 ): Promise<{ ok: boolean; token?: string; error?: string }> {
+  const h = await headers();
+  if (
+    !(await consumeRateLimit(
+      "register",
+      getRequestIp(h),
+      8,
+      60 * 60 * 1000
+    )).ok
+  ) {
+    return {
+      ok: false,
+      error: "Too many registration attempts. Try again in an hour.",
+    };
+  }
+
   const db = getDb();
   const trimmed = email.trim().toLowerCase();
 
@@ -36,8 +47,11 @@ export async function registerAction(
   if (existing.length > 0) {
     return { ok: false, error: "An account with this email already exists." };
   }
-  if (password.length < 6) {
-    return { ok: false, error: "Password must be at least 6 characters." };
+  if (password.length < 8) {
+    return {
+      ok: false,
+      error: "Password must be at least 8 characters.",
+    };
   }
 
   const passwordHash = await hashPassword(password);
@@ -50,10 +64,14 @@ export async function registerAction(
     confirmToken: token,
   });
 
-  // Seed an empty profile row with the name provided at registration
   await db
     .insert(profiles)
-    .values({ email: trimmed, firstName: firstName.trim(), lastName: lastName.trim(), phone: "" })
+    .values({
+      email: trimmed,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      phone: "",
+    })
     .onConflictDoUpdate({
       target: profiles.email,
       set: { firstName: firstName.trim(), lastName: lastName.trim() },
@@ -82,6 +100,8 @@ export async function confirmAction(
     .set({ confirmed: true, confirmToken: null })
     .where(eq(users.email, user.email));
 
+  await createSession(user.email);
+
   return { ok: true, email: user.email };
 }
 
@@ -89,6 +109,21 @@ export async function signInAction(
   email: string,
   password: string
 ): Promise<{ ok: boolean; email?: string; error?: string }> {
+  const h = await headers();
+  if (
+    !(await consumeRateLimit(
+      "signin",
+      getRequestIp(h),
+      40,
+      15 * 60 * 1000
+    )).ok
+  ) {
+    return {
+      ok: false,
+      error: "Too many sign-in attempts. Please try again later.",
+    };
+  }
+
   const db = getDb();
   const trimmed = email.trim().toLowerCase();
 
@@ -102,9 +137,17 @@ export async function signInAction(
     return { ok: false, error: "No account found with this email." };
   }
 
-  const passwordHash = await hashPassword(password);
-  if (user.passwordHash !== passwordHash) {
+  const match = await verifyPassword(password, user.passwordHash);
+  if (!match) {
     return { ok: false, error: "Incorrect password." };
+  }
+
+  if (isLegacySha256Hash(user.passwordHash)) {
+    const upgraded = await hashPassword(password);
+    await db
+      .update(users)
+      .set({ passwordHash: upgraded })
+      .where(eq(users.email, user.email));
   }
 
   if (!user.confirmed) {
@@ -114,5 +157,11 @@ export async function signInAction(
     };
   }
 
+  await createSession(user.email);
+
   return { ok: true, email: user.email };
+}
+
+export async function signOutAction(): Promise<void> {
+  await clearSession();
 }
