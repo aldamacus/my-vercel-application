@@ -7,7 +7,13 @@ import {
   addGuestMessageAction,
   type MessageRow,
 } from "@/app/actions/messages";
-import { getBookingsAction, type BookingRow } from "@/app/actions/bookings";
+import {
+  cancelBookingByGuestAction,
+  getBookingsAction,
+  requestBookingCancellationByGuestAction,
+  type BookingRow,
+  updatePaymentReferenceByGuestAction,
+} from "@/app/actions/bookings";
 import { getPropertyWifiForGuestAction } from "@/app/actions/property-settings";
 import {
   User,
@@ -29,6 +35,13 @@ import { AUTH_CHANGE_EVENT, fetchAuthSession } from "@/lib/authClient";
 import { signOutAction } from "@/app/actions/auth";
 import { setAuthReturnPath } from "@/lib/authRedirect";
 import { isAdminEmail } from "@/lib/admin";
+import {
+  canGuestCancelBooking,
+  canGuestEditPaymentReference,
+  canGuestRequestCancellation,
+  formatBookingStatus,
+  type BookingStatus,
+} from "@/lib/booking-workflow";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -40,6 +53,43 @@ interface Profile {
   lastName: string;
   phone: string;
   email: string;
+}
+
+function getStatusBadgeClass(status: BookingStatus): string {
+  switch (status) {
+    case "new":
+      return "bg-amber-50 text-amber-700";
+    case "pending":
+      return "bg-orange-50 text-orange-700";
+    case "upcoming":
+      return "bg-blue-50 text-blue-700";
+    case "cancellation_requested":
+      return "bg-red-50 text-red-700";
+    case "cancelled":
+    case "rejected":
+      return "bg-neutral-100 text-neutral-600";
+    case "completed":
+      return "bg-emerald-50 text-emerald-700";
+  }
+}
+
+function getStatusHint(status: BookingStatus): string {
+  switch (status) {
+    case "new":
+      return "Awaiting admin review";
+    case "pending":
+      return "Add your advance payment reference, then wait for confirmation";
+    case "upcoming":
+      return "Tap to view access details";
+    case "cancellation_requested":
+      return "Cancellation request sent to the admin";
+    case "cancelled":
+      return "This booking was cancelled";
+    case "rejected":
+      return "This booking was rejected by the admin";
+    case "completed":
+      return "Your stay is completed";
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -213,6 +263,7 @@ function BookingModal({
     };
   }, []);
 
+  const statusLabel = formatBookingStatus(booking.status);
   const entrance = booking.entranceCode.trim();
   const notes = booking.hostNotes.trim();
   const wifiSsid = (wifi?.wifiSsid ?? "").trim();
@@ -264,8 +315,13 @@ function BookingModal({
                 <p className="text-sm font-semibold text-neutral-900">{booking.apartment}</p>
                 <p className="text-xs text-neutral-500">{booking.location}</p>
               </div>
-              <span className="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-700">
-                Upcoming
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                  getStatusBadgeClass(booking.status)
+                )}
+              >
+                {statusLabel}
               </span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
@@ -331,77 +387,77 @@ function BookingModal({
 function BookingCard({
   booking,
   onClick,
+  children,
 }: {
   booking: BookingRow;
   onClick?: () => void;
+  children?: React.ReactNode;
 }) {
-  const upcoming = booking.status === "upcoming";
-  const isNew = booking.status === "new";
-  const Wrapper = upcoming ? "button" : "div";
+  const upcomingLike =
+    booking.status === "upcoming" ||
+    booking.status === "cancellation_requested";
+  const Wrapper = upcomingLike ? "button" : "div";
   return (
-    <Wrapper
-      {...(upcoming ? { onClick, type: "button" as const } : {})}
-      className={cn(
-        "w-full rounded-xl border border-neutral-200 bg-white overflow-hidden shadow-sm text-left",
-        upcoming && "cursor-pointer transition hover:border-neutral-300 hover:shadow-md active:scale-[0.995]"
-      )}
-    >
-      <div className="flex flex-col sm:flex-row">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={booking.image}
-          alt={booking.apartment}
-          className="h-40 w-full object-cover sm:h-auto sm:w-36 sm:shrink-0"
-        />
-        <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="text-sm font-semibold text-neutral-900">{booking.apartment}</p>
-              <p className="text-xs text-neutral-500">{booking.location}</p>
+    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <Wrapper
+        {...(upcomingLike ? { onClick, type: "button" as const } : {})}
+        className={cn(
+          "w-full text-left",
+          upcomingLike &&
+            "cursor-pointer transition hover:border-neutral-300 hover:bg-neutral-50 active:scale-[0.995]"
+        )}
+      >
+        <div className="flex flex-col sm:flex-row">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={booking.image}
+            alt={booking.apartment}
+            className="h-40 w-full object-cover sm:h-auto sm:w-36 sm:shrink-0"
+          />
+          <div className="flex flex-1 flex-col justify-between gap-3 p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <p className="text-sm font-semibold text-neutral-900">{booking.apartment}</p>
+                <p className="text-xs text-neutral-500">{booking.location}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1.5">
+                <span
+                  className={cn(
+                    "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
+                    getStatusBadgeClass(booking.status)
+                  )}
+                >
+                  {formatBookingStatus(booking.status)}
+                </span>
+                <span className="text-[10px] text-neutral-400">
+                  {getStatusHint(booking.status)}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col items-end gap-1.5">
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
-                  upcoming
-                    ? "bg-blue-50 text-blue-700"
-                    : isNew
-                    ? "bg-amber-50 text-amber-700"
-                    : "bg-neutral-100 text-neutral-500"
-                )}
-              >
-                {upcoming ? "Upcoming" : isNew ? "Pending review" : "Completed"}
-              </span>
-              {upcoming && (
-                <span className="text-[10px] text-neutral-400">Tap to view access details</span>
-              )}
-              {isNew && (
-                <span className="text-[10px] text-neutral-400">Awaiting admin confirmation</span>
-              )}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
+              <div>
+                <span className="text-neutral-400">Check-in</span>
+                <p className="font-medium text-neutral-700">{booking.checkIn}</p>
+              </div>
+              <div>
+                <span className="text-neutral-400">Check-out</span>
+                <p className="font-medium text-neutral-700">{booking.checkOut}</p>
+              </div>
+              <div>
+                <span className="text-neutral-400">Nights</span>
+                <p className="font-medium text-neutral-700">{booking.nights}</p>
+              </div>
+              <div>
+                <span className="text-neutral-400">Total</span>
+                <p className="font-medium text-neutral-700">{booking.total}</p>
+              </div>
             </div>
+            <p className="text-[11px] text-neutral-400">Booking #{booking.id}</p>
           </div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs">
-            <div>
-              <span className="text-neutral-400">Check-in</span>
-              <p className="font-medium text-neutral-700">{booking.checkIn}</p>
-            </div>
-            <div>
-              <span className="text-neutral-400">Check-out</span>
-              <p className="font-medium text-neutral-700">{booking.checkOut}</p>
-            </div>
-            <div>
-              <span className="text-neutral-400">Nights</span>
-              <p className="font-medium text-neutral-700">{booking.nights}</p>
-            </div>
-            <div>
-              <span className="text-neutral-400">Total</span>
-              <p className="font-medium text-neutral-700">{booking.total}</p>
-            </div>
-          </div>
-          <p className="text-[11px] text-neutral-400">Booking #{booking.id}</p>
         </div>
-      </div>
-    </Wrapper>
+      </Wrapper>
+      {children ? <div className="border-t border-neutral-100 bg-neutral-50 p-4">{children}</div> : null}
+    </div>
   );
 }
 
@@ -412,17 +468,55 @@ function BookingsPanel() {
   const [allBookings, setAllBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBooking, setSelectedBooking] = useState<BookingRow | null>(null);
+  const [paymentDrafts, setPaymentDrafts] = useState<Record<string, string>>({});
+  const [busyBookingId, setBusyBookingId] = useState<string | null>(null);
+  const [bookingError, setBookingError] = useState<Record<string, string>>({});
 
   useEffect(() => {
     getBookingsAction().then((rows) => {
       setAllBookings(rows);
+      setPaymentDrafts(
+        Object.fromEntries(rows.map((row) => [row.id, row.paymentReference]))
+      );
       setLoading(false);
     });
   }, []);
 
-  const pendingNew = allBookings.filter((b) => b.status === "new");
-  const upcoming = allBookings.filter((b) => b.status === "upcoming");
-  const completed = allBookings.filter((b) => b.status === "completed");
+  function replaceBooking(updated: BookingRow) {
+    setAllBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+    setPaymentDrafts((prev) => ({ ...prev, [updated.id]: updated.paymentReference }));
+    if (selectedBooking?.id === updated.id) {
+      setSelectedBooking(updated);
+    }
+  }
+
+  async function runBookingAction(
+    bookingId: string,
+    action: () => Promise<{ ok: boolean; error?: string; booking?: BookingRow }>
+  ) {
+    setBusyBookingId(bookingId);
+    setBookingError((prev) => ({ ...prev, [bookingId]: "" }));
+    const result = await action();
+    setBusyBookingId(null);
+    if (!result.ok) {
+      setBookingError((prev) => ({
+        ...prev,
+        [bookingId]: result.error ?? "Could not update booking.",
+      }));
+      return;
+    }
+    if (result.booking) replaceBooking(result.booking);
+  }
+
+  const newBookings = allBookings.filter((b) => b.status === "new");
+  const pendingBookings = allBookings.filter((b) => b.status === "pending");
+  const upcomingBookings = allBookings.filter((b) => b.status === "upcoming");
+  const cancellationRequestedBookings = allBookings.filter(
+    (b) => b.status === "cancellation_requested"
+  );
+  const historyBookings = allBookings.filter((b) =>
+    ["completed", "cancelled", "rejected"].includes(b.status)
+  );
 
   return (
     <div>
@@ -436,35 +530,175 @@ function BookingsPanel() {
         <p className="text-sm text-neutral-400">No bookings yet. Reserve your stay to get started.</p>
       ) : (
         <div className="flex flex-col gap-4">
-          {pendingNew.length > 0 && (
+          {newBookings.length > 0 && (
             <>
               <div className="flex items-center gap-2">
                 <Clock size={14} className="text-amber-500" />
-                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Pending review</span>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">New</span>
               </div>
-              {pendingNew.map((b) => (
-                <BookingCard key={b.id} booking={b} />
+              {newBookings.map((b) => (
+                <BookingCard key={b.id} booking={b}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {canGuestCancelBooking(b.status) && (
+                      <button
+                        type="button"
+                        disabled={busyBookingId === b.id}
+                        onClick={() =>
+                          runBookingAction(b.id, () =>
+                            cancelBookingByGuestAction(b.id)
+                          )
+                        }
+                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                      >
+                        {busyBookingId === b.id ? "Updating…" : "Cancel booking"}
+                      </button>
+                    )}
+                  </div>
+                  {bookingError[b.id] ? (
+                    <p className="mt-2 text-xs text-red-600">{bookingError[b.id]}</p>
+                  ) : null}
+                </BookingCard>
               ))}
             </>
           )}
-          {upcoming.length > 0 && (
+          {pendingBookings.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                <Clock size={14} className="text-orange-500" />
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Pending payment</span>
+              </div>
+              {pendingBookings.map((b) => (
+                <BookingCard key={b.id} booking={b}>
+                  <div className="space-y-3">
+                    {canGuestEditPaymentReference(b.status) && (
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-neutral-600">
+                          Advance payment reference
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={paymentDrafts[b.id] ?? ""}
+                          onChange={(e) =>
+                            setPaymentDrafts((prev) => ({
+                              ...prev,
+                              [b.id]: e.target.value,
+                            }))
+                          }
+                          className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
+                          placeholder="Transaction ID, payment note, or transfer reference"
+                        />
+                        <p className="mt-1 text-[11px] text-neutral-500">
+                          Add the reference you used for the advance payment so the admin can confirm it.
+                        </p>
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {canGuestEditPaymentReference(b.status) && (
+                        <button
+                          type="button"
+                          disabled={busyBookingId === b.id}
+                          onClick={() =>
+                            runBookingAction(b.id, () =>
+                              updatePaymentReferenceByGuestAction(
+                                b.id,
+                                paymentDrafts[b.id] ?? ""
+                              )
+                            )
+                          }
+                          className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-neutral-700 disabled:opacity-50"
+                        >
+                          {busyBookingId === b.id ? "Saving…" : "Save payment reference"}
+                        </button>
+                      )}
+                      {canGuestCancelBooking(b.status) && (
+                        <button
+                          type="button"
+                          disabled={busyBookingId === b.id}
+                          onClick={() =>
+                            runBookingAction(b.id, () =>
+                              cancelBookingByGuestAction(b.id)
+                            )
+                          }
+                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                        >
+                          {busyBookingId === b.id ? "Updating…" : "Cancel booking"}
+                        </button>
+                      )}
+                    </div>
+                    {bookingError[b.id] ? (
+                      <p className="text-xs text-red-600">{bookingError[b.id]}</p>
+                    ) : null}
+                  </div>
+                </BookingCard>
+              ))}
+            </>
+          )}
+          {upcomingBookings.length > 0 && (
             <>
               <div className="flex items-center gap-2">
                 <Clock size={14} className="text-blue-500" />
                 <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Upcoming</span>
               </div>
-              {upcoming.map((b) => (
-                <BookingCard key={b.id} booking={b} onClick={() => setSelectedBooking(b)} />
+              {upcomingBookings.map((b) => (
+                <BookingCard
+                  key={b.id}
+                  booking={b}
+                  onClick={() => setSelectedBooking(b)}
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    {canGuestRequestCancellation(b.status) && (
+                      <button
+                        type="button"
+                        disabled={busyBookingId === b.id}
+                        onClick={() =>
+                          runBookingAction(b.id, () =>
+                            requestBookingCancellationByGuestAction(b.id)
+                          )
+                        }
+                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                      >
+                        {busyBookingId === b.id ? "Sending…" : "Request cancellation"}
+                      </button>
+                    )}
+                  </div>
+                  {bookingError[b.id] ? (
+                    <p className="mt-2 text-xs text-red-600">{bookingError[b.id]}</p>
+                  ) : null}
+                </BookingCard>
               ))}
             </>
           )}
-          {completed.length > 0 && (
+          {cancellationRequestedBookings.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                <Clock size={14} className="text-red-500" />
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+                  Cancellation requested
+                </span>
+              </div>
+              {cancellationRequestedBookings.map((b) => (
+                <BookingCard
+                  key={b.id}
+                  booking={b}
+                  onClick={() => setSelectedBooking(b)}
+                >
+                  <p className="text-xs text-neutral-600">
+                    The admin has been notified. Your booking remains active until the cancellation is approved.
+                  </p>
+                  {bookingError[b.id] ? (
+                    <p className="mt-2 text-xs text-red-600">{bookingError[b.id]}</p>
+                  ) : null}
+                </BookingCard>
+              ))}
+            </>
+          )}
+          {historyBookings.length > 0 && (
             <>
               <div className="mt-2 flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-neutral-400" />
-                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Completed</span>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Past bookings</span>
               </div>
-              {completed.map((b) => (
+              {historyBookings.map((b) => (
                 <BookingCard key={b.id} booking={b} />
               ))}
             </>

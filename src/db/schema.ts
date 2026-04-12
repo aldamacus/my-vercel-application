@@ -30,6 +30,9 @@ export const bookings = pgTable("bookings", {
   image:         text("image").notNull(),
   entranceCode:  text("entrance_code").notNull().default(""),
   hostNotes:     text("host_notes").notNull().default(""),
+  adminInternalComment: text("admin_internal_comment").notNull().default(""),
+  paymentReference: text("payment_reference").notNull().default(""),
+  statusUpdatedAt: timestamp("status_updated_at").defaultNow(),
   createdAt:     timestamp("created_at").defaultNow(),
 });
 

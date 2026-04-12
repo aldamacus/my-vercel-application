@@ -12,9 +12,9 @@ import {
 } from "@/lib/authClient";
 import { isAdminEmail } from "@/lib/admin";
 
+
 function HeaderAuth() {
   const [session, setSession] = useState<AuthSession | null>(null);
-
   useEffect(() => {
     fetchAuthSession().then(setSession);
     const handler = () => fetchAuthSession().then(setSession);
@@ -32,11 +32,11 @@ function HeaderAuth() {
         aria-label={accountLabel}
         title={session.email}
       >
-     
+
         {session.email[0].toUpperCase()}
-      
+
       </Link>
-     
+
     );
   }
 

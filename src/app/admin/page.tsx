@@ -15,10 +15,15 @@ import { signOutAction } from "@/app/actions/auth";
 import { isAdminEmail } from "@/lib/admin";
 import { cn } from "@/lib/utils";
 import {
+  completeBookingByAdminAction,
+  confirmBookingPaymentByAdminAction,
   getAllBookingsForAdminAction,
-  updateBookingByAdminAction,
   listGuestEmailsForAdminAction,
+  markBookingPendingByAdminAction,
+  rejectBookingByAdminAction,
+  resolveCancellationRequestByAdminAction,
   type AdminBookingRow,
+  updateBookingAdminDetailsAction,
 } from "@/app/actions/bookings";
 import {
   getPropertyWifiAdminAction,
@@ -29,10 +34,16 @@ import {
   addHostMessageForGuestAction,
   type MessageRow,
 } from "@/app/actions/messages";
+import {
+  canAdminCompleteBooking,
+  canAdminConfirmUpcoming,
+  canAdminMoveToPending,
+  canAdminRejectBooking,
+  canAdminResolveCancellation,
+  formatBookingStatus,
+} from "@/lib/booking-workflow";
 
 type Tab = "bookings" | "messages";
-
-const STATUS_OPTIONS = ["new", "upcoming", "completed"] as const;
 
 export default function AdminPage() {
   const router = useRouter();
@@ -43,11 +54,14 @@ export default function AdminPage() {
   const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editStatus, setEditStatus] = useState("");
   const [editTotal, setEditTotal] = useState("");
   const [editEntrance, setEditEntrance] = useState("");
-  const [editNotes, setEditNotes] = useState("");
-  const [savingBooking, setSavingBooking] = useState(false);
+  const [editHostNotes, setEditHostNotes] = useState("");
+  const [editInternalComment, setEditInternalComment] = useState("");
+  const [savingBookingDetails, setSavingBookingDetails] = useState(false);
+  const [runningStatusAction, setRunningStatusAction] = useState<string | null>(
+    null
+  );
   const [bookingError, setBookingError] = useState("");
 
   const [wifiSsid, setWifiSsid] = useState("");
@@ -111,16 +125,16 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (!selected) {
-      setEditStatus("");
       setEditTotal("");
       setEditEntrance("");
-      setEditNotes("");
+      setEditHostNotes("");
+      setEditInternalComment("");
       return;
     }
-    setEditStatus(selected.status);
     setEditTotal(selected.total);
     setEditEntrance(selected.entranceCode);
-    setEditNotes(selected.hostNotes);
+    setEditHostNotes(selected.hostNotes);
+    setEditInternalComment(selected.adminInternalComment);
     setBookingError("");
   }, [selected]);
 
@@ -152,35 +166,42 @@ export default function AdminPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
-  async function handleSaveBooking(e: React.FormEvent) {
+  function replaceBooking(updated: AdminBookingRow) {
+    setBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+  }
+
+  async function handleSaveBookingDetails(e: React.FormEvent) {
     e.preventDefault();
     if (!actorEmail || !selectedId) return;
-    setSavingBooking(true);
+    setSavingBookingDetails(true);
     setBookingError("");
-    const res = await updateBookingByAdminAction(selectedId, {
-      status: editStatus,
+    const res = await updateBookingAdminDetailsAction(selectedId, {
       total: editTotal,
       entranceCode: editEntrance,
-      hostNotes: editNotes,
+      hostNotes: editHostNotes,
+      adminInternalComment: editInternalComment,
     });
-    setSavingBooking(false);
+    setSavingBookingDetails(false);
     if (!res.ok) {
       setBookingError(res.error ?? "Could not save.");
       return;
     }
-    setBookings((prev) =>
-      prev.map((b) =>
-        b.id === selectedId
-          ? {
-              ...b,
-              status: editStatus,
-              total: editTotal,
-              entranceCode: editEntrance,
-              hostNotes: editNotes,
-            }
-          : b
-      )
-    );
+    if (res.booking) replaceBooking(res.booking);
+  }
+
+  async function runStatusAction(
+    actionKey: string,
+    callback: () => Promise<{ ok: boolean; error?: string; booking?: AdminBookingRow }>
+  ) {
+    setRunningStatusAction(actionKey);
+    setBookingError("");
+    const res = await callback();
+    setRunningStatusAction(null);
+    if (!res.ok) {
+      setBookingError(res.error ?? "Could not update status.");
+      return;
+    }
+    if (res.booking) replaceBooking(res.booking);
   }
 
   async function handleSaveWifi(e: React.FormEvent) {
@@ -209,6 +230,24 @@ export default function AdminPage() {
     window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     router.push("/");
     router.refresh();
+  }
+
+  function getStatusBadgeClass(status: AdminBookingRow["status"]) {
+    switch (status) {
+      case "new":
+        return "bg-amber-50 text-amber-700";
+      case "pending":
+        return "bg-orange-50 text-orange-700";
+      case "upcoming":
+        return "bg-blue-50 text-blue-700";
+      case "cancellation_requested":
+        return "bg-red-50 text-red-700";
+      case "cancelled":
+      case "rejected":
+        return "bg-neutral-200 text-neutral-700";
+      case "completed":
+        return "bg-emerald-50 text-emerald-700";
+    }
   }
 
   if (!ready || !actorEmail) return null;
@@ -362,8 +401,13 @@ export default function AdminPage() {
                               {b.checkIn} → {b.checkOut}
                             </td>
                             <td className="py-2.5 pr-3">
-                              <span className="rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-800">
-                                {b.status}
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-xs font-medium",
+                                  getStatusBadgeClass(b.status)
+                                )}
+                              >
+                                {formatBookingStatus(b.status)}
                               </span>
                             </td>
                             <td className="py-2.5 text-neutral-700">{b.total}</td>
@@ -380,29 +424,155 @@ export default function AdminPage() {
                   </h2>
                   {!selected ? (
                     <p className="text-sm text-neutral-500">
-                      Select a row to update status, total, door code, and notes.
+                      Select a row to update workflow, guest instructions, internal comments, and access details.
                     </p>
                   ) : (
                     <form
-                      onSubmit={handleSaveBooking}
+                      onSubmit={handleSaveBookingDetails}
                       className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4"
                     >
                       <p className="truncate text-xs text-neutral-500">{selected.userEmail}</p>
                       <div>
                         <label className="mb-1 block text-xs font-medium text-neutral-600">
-                          Status
+                          Current status
                         </label>
-                        <select
-                          value={editStatus}
-                          onChange={(e) => setEditStatus(e.target.value)}
-                          className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
+                        <div
+                          className={cn(
+                            "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                            getStatusBadgeClass(selected.status)
+                          )}
                         >
-                          {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
+                          {formatBookingStatus(selected.status)}
+                        </div>
+                      </div>
+                      <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                        <p className="mb-2 text-xs font-medium text-neutral-600">
+                          Workflow actions
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {canAdminMoveToPending(selected.status) && (
+                            <button
+                              type="button"
+                              disabled={runningStatusAction !== null}
+                              onClick={() =>
+                                runStatusAction("pending", () =>
+                                  markBookingPendingByAdminAction(selected.id)
+                                )
+                              }
+                              className="rounded-lg bg-neutral-900 px-3 py-2 text-xs font-semibold text-white transition hover:bg-neutral-700 disabled:opacity-50"
+                            >
+                              {runningStatusAction === "pending"
+                                ? "Updating…"
+                                : "Move to pending"}
+                            </button>
+                          )}
+                          {canAdminRejectBooking(selected.status) && (
+                            <button
+                              type="button"
+                              disabled={runningStatusAction !== null}
+                              onClick={() =>
+                                runStatusAction("rejected", () =>
+                                  rejectBookingByAdminAction(selected.id)
+                                )
+                              }
+                              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                            >
+                              {runningStatusAction === "rejected"
+                                ? "Updating…"
+                                : "Reject booking"}
+                            </button>
+                          )}
+                          {canAdminConfirmUpcoming(
+                            selected.status,
+                            selected.paymentReference
+                          ) && (
+                            <button
+                              type="button"
+                              disabled={runningStatusAction !== null}
+                              onClick={() =>
+                                runStatusAction("upcoming", () =>
+                                  confirmBookingPaymentByAdminAction(selected.id)
+                                )
+                              }
+                              className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-500 disabled:opacity-50"
+                            >
+                              {runningStatusAction === "upcoming"
+                                ? "Updating…"
+                                : "Confirm payment"}
+                            </button>
+                          )}
+                          {canAdminResolveCancellation(selected.status) && (
+                            <>
+                              <button
+                                type="button"
+                                disabled={runningStatusAction !== null}
+                                onClick={() =>
+                                  runStatusAction("cancelled", () =>
+                                    resolveCancellationRequestByAdminAction(
+                                      selected.id,
+                                      "cancelled"
+                                    )
+                                  )
+                                }
+                                className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                              >
+                                {runningStatusAction === "cancelled"
+                                  ? "Updating…"
+                                  : "Approve cancellation"}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={runningStatusAction !== null}
+                                onClick={() =>
+                                  runStatusAction("restore-upcoming", () =>
+                                    resolveCancellationRequestByAdminAction(
+                                      selected.id,
+                                      "upcoming"
+                                    )
+                                  )
+                                }
+                                className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:bg-neutral-100 disabled:opacity-50"
+                              >
+                                {runningStatusAction === "restore-upcoming"
+                                  ? "Updating…"
+                                  : "Keep as upcoming"}
+                              </button>
+                            </>
+                          )}
+                          {canAdminCompleteBooking(selected.status) && (
+                            <button
+                              type="button"
+                              disabled={runningStatusAction !== null}
+                              onClick={() =>
+                                runStatusAction("completed", () =>
+                                  completeBookingByAdminAction(selected.id)
+                                )
+                              }
+                              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
+                            >
+                              {runningStatusAction === "completed"
+                                ? "Updating…"
+                                : "Mark completed"}
+                            </button>
+                          )}
+                        </div>
+                        {selected.status === "pending" &&
+                        !selected.paymentReference.trim() ? (
+                          <p className="mt-2 text-xs text-orange-600">
+                            Waiting for the guest to add a payment reference before you can confirm the booking.
+                          </p>
+                        ) : null}
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-neutral-600">
+                          Guest payment reference
+                        </label>
+                        <textarea
+                          value={selected.paymentReference}
+                          readOnly
+                          rows={3}
+                          className="w-full resize-y rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-sm text-neutral-700 outline-none"
+                        />
                       </div>
                       <div>
                         <label className="mb-1 block text-xs font-medium text-neutral-600">
@@ -427,11 +597,22 @@ export default function AdminPage() {
                       </div>
                       <div>
                         <label className="mb-1 block text-xs font-medium text-neutral-600">
-                          Host notes
+                          Guest instructions
                         </label>
                         <textarea
-                          value={editNotes}
-                          onChange={(e) => setEditNotes(e.target.value)}
+                          value={editHostNotes}
+                          onChange={(e) => setEditHostNotes(e.target.value)}
+                          rows={4}
+                          className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-neutral-600">
+                          Internal admin comments
+                        </label>
+                        <textarea
+                          value={editInternalComment}
+                          onChange={(e) => setEditInternalComment(e.target.value)}
                           rows={4}
                           className="w-full resize-y rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-neutral-400"
                         />
@@ -441,10 +622,10 @@ export default function AdminPage() {
                       ) : null}
                       <button
                         type="submit"
-                        disabled={savingBooking}
+                        disabled={savingBookingDetails}
                         className="rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-neutral-700 disabled:opacity-50"
                       >
-                        {savingBooking ? "Saving…" : "Save booking"}
+                        {savingBookingDetails ? "Saving…" : "Save details"}
                       </button>
                     </form>
                   )}

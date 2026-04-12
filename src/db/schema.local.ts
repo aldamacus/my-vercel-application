@@ -37,6 +37,9 @@ export const bookingsInTest = test.table("bookings", {
   image:         text().notNull(),
   entranceCode:  text("entrance_code").default("").notNull(),
   hostNotes:     text("host_notes").default("").notNull(),
+  adminInternalComment: text("admin_internal_comment").default("").notNull(),
+  paymentReference: text("payment_reference").default("").notNull(),
+  statusUpdatedAt: timestamp("status_updated_at", { mode: "string" }).defaultNow(),
   createdAt:     timestamp("created_at", { mode: "string" }).defaultNow(),
 });
 
